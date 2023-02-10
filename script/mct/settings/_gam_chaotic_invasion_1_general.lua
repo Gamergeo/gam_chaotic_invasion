@@ -1,4 +1,4 @@
-core:load_mod_script("/script/_lib/mod/gam_lib_mct.lua")
+core:load_mod_script("/script/_lib/mod/gam_lib_mct.lua");
 
 GAM_MOD:set_title("Chaotic invasion", false);
 GAM_MOD:set_author("Gamergeo");
@@ -6,10 +6,11 @@ GAM_MOD:set_description("Several options to get invasions more random. Chaos inv
 GAM_MOD:set_section_sort_function("index_sort");
 
 -- General Section
-local default = GAM_MOD:get_section_by_key("default");
-default:set_localised_text("General Settings", false);
-default:set_option_sort_function("index_sort");
+local section = GAM_MOD:get_section_by_key("default");
+section:set_localised_text("General Settings", false);
+section:set_option_sort_function("index_sort");
 
-local invasion = GAM_MOD:add_new_ci_option(CI_SETTINGS.INVASIONS_ACTIVATED);
-invasion:set_text("Invasion features");
-invasion:set_tooltip_text("If not checked, invasion won't spawn at all.");
+local option_infos = {};
+option_infos.title = "Invasion features";
+option_infos.tooltip = "If not checked, invasion won't spawn at all.";
+GAM_MOD:add_new_ci_option(option_infos, CI_SETTINGS.INVASIONS_ACTIVATED);

@@ -1,22 +1,5 @@
 
 
-CI_ARMY_TYPES = {
-    CHAOS = {
-        key = "chaos",
-        effect_bundle = "wh_main_bundle_military_upkeep_free_force",
-        buildings = {"wh_main_horde_chaos_settlement_3", "wh_main_horde_chaos_warriors_2", "wh_main_horde_chaos_forge_1"}
-    },
-    NORSCA = {
-        key = "norsca",
-        effect_bundle = "wh_main_bundle_military_upkeep_free_force",
-    },
-    BEASTMEN = {
-        key = "beastmen",
-        effect_bundle = "wh_main_bundle_military_upkeep_free_force",
-        buildings = {"wh_dlc03_horde_beastmen_herd_5", "wh_dlc03_horde_beastmen_gors_3", "wh_dlc03_horde_beastmen_minotaurs_1"}
-    }
-}
-
 CI_DATA = {
 	CI_LAST_UPDATE = -1,
     CI_INVASION_STAGE = 0,
