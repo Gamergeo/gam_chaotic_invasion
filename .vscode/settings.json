@@ -1,0 +1,14 @@
+{
+    "Lua.diagnostics.globals": [
+        "out",
+        "cm",
+        "Setup_Norsca_Chaos_Invasion",
+        "CI_setup_armies",
+        "core",
+        "random_army_manager",
+        "invasion_manager",
+        "__write_output_to_logfile",
+        "get_mct",
+        "mct"
+    ]
+}
