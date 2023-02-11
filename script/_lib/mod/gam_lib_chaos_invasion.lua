@@ -1,4 +1,4 @@
-local verbose = true;
+local verbose = false;
 
 CI_INVASION_STAGES = {
     START = {key = "start", index = 0}, -- Before intro stage
@@ -41,7 +41,7 @@ CI_ARMY_TYPES = {
 CI_SETTINGS = {
 
     -- Is chaos invasion mechanism activated
-    INVASIONS_ACTIVATED = {key = "invasion", values = {value = true}},
+    INVASIONS_ACTIVATED = {key = "invasions_activated", values = {value = true}},
 
     -- Starting turn of invasion stages
     STARTING_TURN = {
@@ -114,7 +114,7 @@ CI_SETTINGS = {
             },
             [CI_INVASION_STAGES.END_GAME.key] = {
                 [CI_INVASION_TYPES.EMPIRE.key] = {
-                    [CI_ARMY_TYPES.CHAOS.key] = {value = true, min = 8, max = 10},
+                    [CI_ARMY_TYPES.CHAOS.key] = {value = true, min = 8, max = 12},
                     [CI_ARMY_TYPES.NORSCA.key] = {value = true, min = 4, max = 6},
                     [CI_ARMY_TYPES.BEASTMEN.key] = {value = true, min = 1, max = 2}
                 },
@@ -138,14 +138,14 @@ CI_SETTINGS = {
         key = "agent_per_invasion",
         values = {
             [CI_INVASION_STAGES.MID_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true, min = 4, max = 6},
+                [CI_INVASION_TYPES.EMPIRE.key] = {value = true, min = 2, max = 4},
                 [CI_INVASION_TYPES.NAGGAROTH.key] = {value = false, min = 0, max = 0},
                 [CI_INVASION_TYPES.ADDITIONAL.key] = {value = false, min = 0, max = 0}
             },
             [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true, min = 8, max = 12},
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = true, min = 2, max = 4},
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true, min = 2, max = 4}
+                [CI_INVASION_TYPES.EMPIRE.key] = {value = true, min = 4, max = 6},
+                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = true, min = 1, max = 2},
+                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true, min = 1, max = 2}
             },
         }
     },
@@ -598,12 +598,11 @@ function GAM_LOG_RESET()
     
     local popLog = io.open("gam_log.txt","w+");
     
----@diagnostic disable-next-line: need-check-nil
-    popLog:write("NEW LOG ["..logTimeStamp.."] \n");
----@diagnostic disable-next-line: need-check-nil
-    popLog:flush();
----@diagnostic disable-next-line: need-check-nil
-    popLog:close();
+    if popLog then
+        popLog:write("NEW LOG ["..logTimeStamp.."] \n");
+        popLog:flush();
+        popLog:close();
+    end
 end
 
 function GAM_LOG(text)
@@ -615,14 +614,12 @@ function GAM_LOG(text)
     local logTimeStamp = os.date("%d, %m %Y %X");
     local popLog = io.open("gam_log.txt","a");
     --# assume logTimeStamp: string
----@diagnostic disable-next-line: need-check-nil
-    popLog:write("GAM (chaotic_invasion):  [".. logTimeStamp .. "]:  "..logText .. "  \n");
+    if popLog then
+        popLog:write("GAM (chaotic_invasion):  [".. logTimeStamp .. "]:  "..logText .. "  \n");
+        popLog :flush();
+        popLog :close();
+    end
     out.chaos("GAM (chaotic_invasion): [".. logTimeStamp .. "]:  "..logText .. "  ");
-
----@diagnostic disable-next-line: need-check-nil
-    popLog :flush();
----@diagnostic disable-next-line: need-check-nil
-    popLog :close();
 end
 
 GAM_LOG_RESET();
