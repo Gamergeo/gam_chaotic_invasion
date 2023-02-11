@@ -1,5 +1,3 @@
-
-
 CI_DATA = {
 	CI_LAST_UPDATE = -1,
     CI_INVASION_STAGE = 0,
@@ -9,7 +7,7 @@ CI_DATA = {
 	CI_AUTORUN = false,
 	CI_EARLY_TURNS = 0, -- Used by wh2_dlc17_lzd_chaos_map.lua
 	CI_EXTRA_ARMIES = 0, -- Used by wh2_dlc17_lzd_chaos_map.lua
-    CI_MID_START_TURN = -1; --Start turn on phase 1. Useful for chance to start phase 2 in somes cases
+    --CI_MID_START_TURN = -1; --Start turn on phase 1. Useful for chance to start phase 2 in somes cases
 };
 
 local function current_stage()
@@ -51,58 +49,18 @@ local function next_stage()
 end
 
 -- Return the setting value for current stage
-function CI_current_stage_setting_value(setting, invasion_type)
-    return CI_setting_values(setting, current_stage(), invasion_type);
+local function load_setting_for_current_stage(setting, invasion_type, special_type)
+    return CI_load_setting(setting, current_stage(), invasion_type, special_type);
 end
 
-CI_RANDOM_POSITIONS = {
-    test = {
-        key = "test",
-        positions = {
-            {200, 200}
-        }
-    },
-    lustria = {
-		key = "lustria",
-		positions = {
-			{282, 15}, {307, 24}
-		}
-	},
-	sea_of_serpents = {
-		key = "sea_of_serpents",
-		positions = {
-			{125, 240}, {140, 250}
-		}
-	},
-	vampire_coast = {
-		key = "vampire_coast",
-		positions = {
-			{470, 155}, {510, 175}
-		}
-	},
-	far_east = {
-		key = "far_east",
-		positions = {
-			{890, 150}, {910, 160}
-		}
-	}
-}
+local function force_name(item)
 
--- IA can't manage too much army. To prevent that, each invasion have his own faction
-CI_FACTIONS = {
-    chaos = {
-        main_faction_key = "wh_main_chs_chaos",
-        other_faction_key = ""
-    },
-    norsca = {
-        main_faction_key = "wh_main_nor_bjornling",
-        other_faction_key = ""
-    },
-    beastmen = {
-        main_faction_key = "wh_dlc03_bst_beastmen_chaos",
-        other_faction_key = ""
-    }
-}
+    if item.key then
+        return "CI_"..item.key;
+    else
+        return "CI_"..item;
+    end
+end
 
 function CI_setup()
 	GAM_LOG("CI_setup()");
@@ -130,7 +88,7 @@ function CI_setup()
 	end
 
     -- TODO
-	local chaos_faction = cm:model():world():faction_by_key(CI_FACTIONS.chaos.main_faction_key);
+	local chaos_faction = cm:model():world():faction_by_key(CI_ARMY_TYPES.CHAOS.main_faction_key);
     
 	if chaos_faction:is_human() == false then
         CI_init_settings();
@@ -200,60 +158,38 @@ function CI_FactionTurnStart(context)
 			GAM_LOG("Chaos Event Update : Turn "..turn_number);
 			out.inc_tab("chaos");
 			CI_DATA.CI_LAST_UPDATE = turn_number;
+
+            -- I've changed the mechanism to start an invasion stage, but will have the smae probalities except
+            -- that in base game, a stage can start on minimal turn, due to formula used
+            -- So each turn a random value between min and max is set, if this value is less than current_turn, we start stage
             
-            local turn_min = CI_setting_values(CI_SETTINGS.MINIMUM_TURN, next_stage);
-            local turn_max = CI_setting_values(CI_SETTINGS.MAXIMUM_TURN, next_stage);
+            local turn_start = CI_load_setting(CI_SETTINGS.STARTING_TURN, next_stage);
+            local _, turn_min, turn_max = CI_setting_values(CI_SETTINGS.STARTING_TURN, next_stage);
                 
             if next_stage == CI_INVASION_STAGES.END_GAME then
                 -- Early turns used by wh2_dlc17_lzd_chaos_map.lua
                 CI_DATA.CI_EARLY_TURNS = CI_DATA.CI_EARLY_TURNS or 0; -- Savegame compatibility
-                turn_min = turn_min - CI_DATA.CI_EARLY_TURNS;
-                turn_max = turn_max - CI_DATA.CI_EARLY_TURNS;
-                
-                -- In case of first and second phase overlapping, we need to adjust turn from the phase 1 start turn
-                if (turn_min <= CI_DATA.CI_MID_START_TURN) then
-                   turn_min = CI_DATA.CI_MID_START_TURN + 1;
-                end
-                if (turn_max <= CI_DATA.CI_MID_START_TURN) then
-                   turn_max = CI_DATA.CI_MID_START_TURN + 1;
-                end
-            end
-            
-            local chance = 0;
-            
-            if turn_min == turn_max then
-                if turn_number >= turn_min then
-                    chance = 100;
-                end
-            else
-                chance = ((1 + turn_number - turn_min) / (1 + turn_max - turn_min)) * 100;
-            end
-            
-            if chance > 100 then
-                chance = 100;
+                turn_start = turn_start - CI_DATA.CI_EARLY_TURNS;
             end
 
             GAM_LOG("Next Event: "..next_stage.key);
             GAM_LOG("\tFirst Possible Turn: "..turn_min);
             GAM_LOG("\tLast Possible Turn: "..turn_max);
             GAM_LOG("\tTurns Early: "..CI_DATA.CI_EARLY_TURNS);
-            GAM_LOG("\tCurrent Chance: "..chance.."%");
+            GAM_LOG("\tCurrent starting turn: "..turn_start.."%");
 
-            if chance > 0 then
-                if cm:model():random_percent(chance) then
-                    GAM_LOG("\t\tSuccess!");
-                    
-                    if next_stage == CI_INVASION_STAGES.INTRO then    
-                        CI_Event_1_Intro();
-                    elseif next_stage == CI_INVASION_STAGES.MID_GAME then
-                        CI_DATA.CI_MID_START_TURN = turn_number;
-                        CI_Event_2_MidGame();
-                    elseif next_stage == CI_INVASION_STAGES.END_GAME then
-                        CI_Event_3_EndGame();
-                    end
-                else
-                    GAM_LOG("\t\tFailed!");
+            if turn_start <= turn_number then
+                GAM_LOG("\t\tSuccess!");
+                
+                if next_stage == CI_INVASION_STAGES.INTRO then    
+                    CI_Event_1_Intro();
+                elseif next_stage == CI_INVASION_STAGES.MID_GAME then
+                    CI_Event_2_MidGame();
+                elseif next_stage == CI_INVASION_STAGES.END_GAME then
+                    CI_Event_3_EndGame();
                 end
+            else
+                GAM_LOG("\t\tFailed!");
             end
         end
     end
@@ -304,12 +240,12 @@ function CI_Event_2_MidGame()
 			"event_feed_strings_text_wh_event_feed_string_scripted_event_chaos_invasion_mid_primary_detail",
 			"",
 			"event_feed_strings_text_wh_event_feed_string_scripted_event_chaos_invasion_mid_secondary_detail",
-			CI_CHAOS_CHARACTERS["archaon"]["spawn_pos_center"].x,
-			CI_CHAOS_CHARACTERS["archaon"]["spawn_pos_center"].y,
+			CI_SPECIAL_CHARACTERS["archaon"]["spawn_pos_center"].x, -- TODO
+			CI_SPECIAL_CHARACTERS["archaon"]["spawn_pos_center"].y, -- TODO
 			true, 30
 		);
 		GAM_LOG("Showing Chaos Event : "..human_factions[i]);
-		cm:make_region_visible_in_shroud(human_factions[i], "wh_main_chaos_wastes");
+		cm:make_region_visible_in_shroud(human_factions[i], "wh_main_chaos_wastes"); -- TODO
 	end
 
     CI_spawn_invasions();
@@ -337,11 +273,14 @@ end
 -- Spawn all invasions
 function CI_spawn_invasions()
     GAM_LOG("CI_spawn_invasions()");
-    
-    -- Empire invasion
-    if CI_current_stage_setting_value(CI_SETTINGS.EMPIRE_ACTIVATED) then
-        CI_spawn_invasion(CI_INVASION_TYPES.EMPIRE);
+
+    for _, invasion_type in pairs(CI_INVASION_TYPES) do
+        if load_setting_for_current_stage(CI_SETTINGS.IS_ACTIVATED, invasion_type) then
+            CI_spawn_invasion(invasion_type);
+        end
     end
+    
+
 end
 
 -- Spawn invasion for invasion_type (Empire, Naggaroth, Additionnal)
@@ -349,32 +288,19 @@ function CI_spawn_invasion(invasion_type)
     GAM_LOG("CI_spawn_invasion("..invasion_type.key..")");
     
     for _, army_type in pairs(CI_ARMY_TYPES) do
-        local number_armies_setting = CI_setting_by_key(army_type.key)
-        local number_armies = CI_current_stage_setting_value(number_armies_setting, invasion_type)
+        local number_armies = load_setting_for_current_stage(CI_SETTINGS.ARMIES_PER_INVASION, invasion_type, army_type);
         
         for _ = 1, number_armies do
             --TODO
-            local faction_key = CI_FACTIONS.chaos.main_faction_key;
+            local faction_key = army_type.main_faction_key;
             --TODO
             local position = CI_get_next_position(CI_LOCATIONS.EMPIRE);
-            local char_level = CI_current_stage_setting_value(CI_SETTINGS.CHARACTER_LEVEL);
-            local army_level = CI_current_stage_setting_value(CI_SETTINGS.ARMY_LEVEL);
+            local char_level = load_setting_for_current_stage(CI_SETTINGS.CHARACTER_LEVEL);
+            local army_level = load_setting_for_current_stage(CI_SETTINGS.ARMY_LEVEL);
             
+            CI_spawn_army(faction_key, army_type, position, 20, 9);
         end
-        
     end
-    
-    local chaos_armies = CI_current_stage_setting_value(CI_SETTINGS.CHAOS_ARMIES, invasion_type);
-    local norsca_armies = CI_current_stage_setting_value(CI_SETTINGS.NORSCA_ARMIES, invasion_type);
-    local beast_armies = CI_current_stage_setting_value(CI_SETTINGS.BEASTMEN_ARMIES, invasion_type);
-    local agents = CI_current_stage_setting_value(CI_SETTINGS.AGENT, invasion_type);
-    
-    for i = 1, #chaos_armies do
-
-    end
-    
-    CI_spawn_army("wh_main_chs_chaos", CI_ARMY_TYPES.CHAOS, {775, 609}, 20, 9);
-    -- End features
 end
 
 function CI_spawn_army(faction_key, army_type, position, char_level, army_level)
@@ -383,11 +309,11 @@ function CI_spawn_army(faction_key, army_type, position, char_level, army_level)
     local x, y = cm:find_valid_spawn_location_for_character_from_position(faction_key, position[1], position[2], true);
     
     if x > -1 and y > -1 then
-        local force = random_army_manager:generate_force("CI_"..army_type.key, 19, false);
+        local force = random_army_manager:generate_force(force_name(army_type), 19, false);
         local turn_number = cm:model():turn_number();
         
         -- TODO?
-        local invasion_key = "GAM_"..army_type.key.."_"..core:get_unique_counter();
+        local invasion_key = "GAM_CI_"..army_type.key.."_"..core:get_unique_counter();
         --local invasion_key = "CI_chaos_"..position_key.."_T"..turn_number.."_"..core:get_unique_counter();
         local army_invasion = invasion_manager:new_invasion(invasion_key, faction_key, force, {x, y});
         army_invasion:add_character_experience(char_level, true);
@@ -500,7 +426,7 @@ end
 
 -- TODO All chaos faction
 function CI_invasion_deaths()
-	local chaos_faction = cm:model():world():faction_by_key(CI_FACTIONS.chaos.faction_key);
+	local chaos_faction = cm:model():world():faction_by_key(CI_ARMY_TYPES.chaos.faction_key);
 	local archaon = 0;
 	local kholek = 0;
 	local sigvald = 0;
