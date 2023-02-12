@@ -1,3 +1,42 @@
+
+
+-- Gamergeo log features                 
+-- Resets the log on session start.
+function GAM_LOG_RESET()
+    if not __write_output_to_logfile then
+        return;
+    end 
+    local logTimeStamp = os.date("%d, %m %Y %X");
+    --# assume logTimeStamp: string
+    
+    local popLog = io.open("gam_log.txt","w+");
+    
+    if popLog then
+        popLog:write("NEW LOG ["..logTimeStamp.."] \n");
+        popLog:flush();
+        popLog:close();
+    end
+end
+
+function GAM_LOG(text)
+    if not __write_output_to_logfile then
+        return; 
+    end
+
+    local logText = tostring(text);
+    local logTimeStamp = os.date("%d, %m %Y %X");
+    local popLog = io.open("gam_log.txt","a");
+    --# assume logTimeStamp: string
+    if popLog then
+        popLog:write("GAM (chaotic_invasion):  [".. logTimeStamp .. "]:  "..logText .. "  \n");
+        popLog :flush();
+        popLog :close();
+    end
+    out.chaos("GAM (chaotic_invasion): [".. logTimeStamp .. "]:  "..logText .. "  ");
+end
+
+GAM_LOG_RESET();
+
 -- For logging features, you still need to activate log debugging
 local verbose = true;
 
@@ -45,218 +84,60 @@ CI_ARMY_TYPES = {
     }
 }
 
--- Chaotic invasion settings
--- I really prefer to work with objects and linked enums so i make this, to connect mct and main lua script
--- key represents the mct key for setting
--- values represents values for settings, and can be of type {value} or {value, min, max} for randomizable settings
---        each values are divided per invasion_stage, invasion_type, character_type and army_type, if needed
---        Examples of direct access to value (not recommended) :
---                 character level maximum on second phase would be CI_SETTINGS[CHARACTER_LEVEL].values.end.max
---                 minimum number of norsca armies on first phase in naggaroth would be CI_SETTINGS[ARMIES_PER_INVASION].values.mid.naggaroth.norsca.minimum
--- Instead of accessing values directly, use CI_load_setting instead
-
--- Maybe one day i'll make a proper ci_setting class with metatable but not sure if it's not too much
 CI_SETTINGS = {
-
-    -- Is chaos invasion mechanism activated
-    INVASIONS_ACTIVATED = {key = "invasions_activated", values = {value = true}},
-
-    -- Starting turn of invasion stages
-    STARTING_TURN = {
-        key = "starting_turn", 
-        values = {
-            [CI_INVASION_STAGES.MID_GAME.key] = {value = true, min = 90, max = 110},
-            [CI_INVASION_STAGES.END_GAME.key] = {value = true, min = 140, max = 160}
-        }
-    },
-
-    -- Lords / Hero Level
-    -- Stage dependent
-    CHARACTER_LEVEL = {
-        key = "character_level", 
-        values = {
-            [CI_INVASION_STAGES.MID_GAME.key] = {value = true, min = 10, max = 20},
-            [CI_INVASION_STAGES.END_GAME.key] = {value = true, min = 20, max = 40}
-        }
-    },
+    INVASIONS_ACTIVATED = "invasion_activated",
+    STARTING_TURN = "starting_turn",
+    CHARACTER_LEVEL = "character_level",
 
     -- Unit army level
     -- Stage dependent
-    ARMY_LEVEL = {
-        key = "army_level", 
-        values = {
-            [CI_INVASION_STAGES.MID_GAME.key] = {value = true, min = 3, max = 6},
-            [CI_INVASION_STAGES.END_GAME.key] = {value = true, min = 6, max = 9}
-        }
-    },
+    ARMY_LEVEL = "army_level",
 
     -- Is specific invasion activated
     -- Stage and invasion type dependent
-    IS_ACTIVATED = {
-        key = "is_activated",
-        values = {
-            [CI_INVASION_STAGES.MID_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true},
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = false},
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = false}
-            },
-            [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true},
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = true},
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true}
-            },
-        }
-    },
-    
+    IS_ACTIVATED = "is_activated",
+
     -- Number of chaos armies per invasion
     -- Stage, invasion type and army_type dependent
-    ARMIES_PER_INVASION = {
-        key = "armies_per_invasion",
-        values = {
-            [CI_INVASION_STAGES.MID_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {
-                    [CI_ARMY_TYPES.CHAOS.key] = {value = true, min = 4, max = 6},
-                    [CI_ARMY_TYPES.NORSCA.key] = {value = false, min = 0, max = 0},
-                    [CI_ARMY_TYPES.BEASTMEN.key] = {value = false, min = 0, max = 0}
-                },
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {
-                    [CI_ARMY_TYPES.CHAOS.key] = {value = false, min = 0, max = 0},
-                    [CI_ARMY_TYPES.NORSCA.key] = {value = false, min = 0, max = 0},
-                    [CI_ARMY_TYPES.BEASTMEN.key] = {value = false, min = 0, max = 0}
-                },
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {
-                    [CI_ARMY_TYPES.CHAOS.key] = {value = false, min = 0, max = 0},
-                    [CI_ARMY_TYPES.NORSCA.key] = {value = false, min = 0, max = 0},
-                    [CI_ARMY_TYPES.BEASTMEN.key] = {value = false, min = 0, max = 0}
-                }
-            },
-            [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {
-                    [CI_ARMY_TYPES.CHAOS.key] = {value = true, min = 8, max = 12},
-                    [CI_ARMY_TYPES.NORSCA.key] = {value = true, min = 4, max = 6},
-                    [CI_ARMY_TYPES.BEASTMEN.key] = {value = true, min = 1, max = 2}
-                },
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {
-                    [CI_ARMY_TYPES.CHAOS.key] = {value = true, min = 4, max = 6},
-                    [CI_ARMY_TYPES.NORSCA.key] = {value = false, min = 0, max = 0},
-                    [CI_ARMY_TYPES.BEASTMEN.key] = {value = false, min = 0, max = 0}
-                },
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {
-                    [CI_ARMY_TYPES.CHAOS.key] = {value = true, min = 4, max = 8},
-                    [CI_ARMY_TYPES.NORSCA.key] = {value = true, min = 2, max = 4},
-                    [CI_ARMY_TYPES.BEASTMEN.key] = {value = true, min = 0, max = 1}
-                }
-            },
-        }
-    },
+    ARMIES_PER_INVASION = "armies_per_invasion",
 
     -- Number of agent per invasion
     -- Stage and invasion type dependent
-    AGENT_PER_INVASION = {
-        key = "agent_per_invasion",
-        values = {
-            [CI_INVASION_STAGES.MID_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true, min = 2, max = 4},
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = false, min = 0, max = 0},
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = false, min = 0, max = 0}
-            },
-            [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true, min = 4, max = 6},
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = true, min = 1, max = 2},
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true, min = 1, max = 2}
-            },
-        }
-    },
+    AGENT_PER_INVASION = "agent_per_invasion",
 
     -- Number of additional invasion
     -- Stage and invasion type dependent
     -- Only for additional invasion type
-    NUMBER_OF_INVASIONS = {
-        key = "number_of_invasions",
-        values = {
-            [CI_INVASION_STAGES.MID_GAME.key] = {
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = false, min = 0, max = 0}
-            },
-            [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true, min = 1, max = 2}
-            },
-        }
-    },
+    NUMBER_OF_ADDITIONAL_INVASIONS = "number_of_invasions",
 
     -- Can special character spawn
     -- Stage, invasion type and character dependent
     -- Only on end stage
-    SPECIAL_CHARACTERS_POSSIBLE = {
-        key = "special_character_possible",
-        values = {
-            [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {
-                    [CI_SPECIAL_CHARACTERS.ARCHAON.key] = {value = true},
-                    [CI_SPECIAL_CHARACTERS.KHOLEK.key] = {value = true},
-                    [CI_SPECIAL_CHARACTERS.SIGVALD.key] = {value = true},
-                    [CI_SPECIAL_CHARACTERS.SARTHORAEL.key] = {value = true}
-                },
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {
-                    [CI_SPECIAL_CHARACTERS.ARCHAON.key] = {value = false},
-                    [CI_SPECIAL_CHARACTERS.KHOLEK.key] = {value = false},
-                    [CI_SPECIAL_CHARACTERS.SIGVALD.key] = {value = false},
-                    [CI_SPECIAL_CHARACTERS.SARTHORAEL.key] = {value = false}
-                },
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {
-                    [CI_SPECIAL_CHARACTERS.ARCHAON.key] = {value = false},
-                    [CI_SPECIAL_CHARACTERS.KHOLEK.key] = {value = false},
-                    [CI_SPECIAL_CHARACTERS.SIGVALD.key] = {value = false},
-                    [CI_SPECIAL_CHARACTERS.SARTHORAEL.key] = {value = false}
-                },
-            }
-        }
-    },
+    SPECIAL_CHARACTERS_POSSIBLE = "special_character_possible",
 
     -- Kill all armies of this invasion on winning stage
-    WINNING_KILL_ARMIES = {
-        key = "winning_kill_armies",
-        values = {
-            [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true},
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = true},
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true}
-            },
-        }
-    },
-
+    WINNING_KILL_ARMIES = "winning_kill_armies",
+    
     -- Can two additional invasions spawn in same place
-    SAME_LOCATION_POSSIBLE = {
-        key = "same_location_possible",
-        values = {value = false}
-    },
-
-    LOCATION_ACTIVATED = {
-        key = "location_activated",
-        values = {
-       --     [CI_ADDITIONAL_LOCATIONS.TEST.key] = {value = true},
-        }
-    }
+    SAME_LOCATION_POSSIBLE = "same_location_possible",
+    LOCATION_ACTIVATED = "location_activated"
 }
 
-local function is_from_table(key, table)
-    for _, item in pairs(table) do
-        if item.key == key then
+local function is_setting(setting)
+    for _, value in pairs(CI_SETTINGS) do
+        if value == setting then
             return true;
         end
     end
-
     return false;
 end
 
-local function is_setting(key)
-    return is_from_table(key, CI_SETTINGS);
-end
-
 local function item_keys(...)
-    local keys = {};
+    local keys;
     arg = {...};
 
     for i = 1, #arg do
+        keys = {};
         local param = arg[i];
 
         if param.key then
@@ -269,76 +150,148 @@ local function item_keys(...)
     return keys;
 end
 
--- Return MCT setting keys (type value / min / max)
-function CI_mct_setting_keys(setting, ...)
+-- Return setting keys (type value / min / max)
+function CI_setting_keys(setting, ...)
     local keys = item_keys(...);
     
-    if not is_setting(setting.key) then
-        GAM_LOG("Error: Setting must be provided");
-        return;
+    if not is_setting(setting) then
+        GAM_LOG("Error: Incorrect setting provided: "..tostring(setting));
+        return "";
     end
 
     if not keys then
-        return setting.key;
+        return setting;
     end
 
-    local mct_key = "";
+    local key = "";
 
     for i = 1, #keys do
 
-        if mct_key == "" then
-            mct_key = keys[i].."_";
+        if key == "" then
+            key = keys[i].."_";
         else
-            mct_key = mct_key..keys[i].."_";
+            key = key..keys[i].."_";
         end
     end
 
-    mct_key = mct_key..setting.key;
+    key = key..setting;
     
-    return mct_key, mct_key.."_minimum", mct_key.."_maximum";
+    return key, key.."_minimum", key.."_maximum";
 end
 
--- Return values for setting and parameter, if exists
--- Returned values can be final values or table of values
-local function setting_values(setting, ...)
-    local keys = item_keys(...);
-    local values = setting.values;
-    
-    for i = 1, #keys do
-        
-        if values[keys[i]] == nil then
-            GAM_LOG("Error: incorrect parameter: "..keys[i].." for setting "..setting.key);
-            return;
-        end
+local settings = {
 
-        values = values[keys[i]];
+    -- Invasions activated
+    [CI_setting_keys(CI_SETTINGS.INVASIONS_ACTIVATED)] = true,
+    [CI_setting_keys(CI_SETTINGS.SAME_LOCATION_POSSIBLE)] = false,
+
+    -- Starting turn
+    [CI_setting_keys(CI_SETTINGS.STARTING_TURN, CI_INVASION_STAGES.MID_GAME)] = {value = true, min = 90, max = 110},
+    [CI_setting_keys(CI_SETTINGS.STARTING_TURN, CI_INVASION_STAGES.END_GAME)] = {value = true, min = 140, max = 160},
+
+    -- Character level
+    [CI_setting_keys(CI_SETTINGS.CHARACTER_LEVEL, CI_INVASION_STAGES.MID_GAME)] = {value = true, min = 10, max = 20},
+    [CI_setting_keys(CI_SETTINGS.CHARACTER_LEVEL, CI_INVASION_STAGES.END_GAME)] = {value = true, min = 20, max = 40},
+
+    -- Army level
+    [CI_setting_keys(CI_SETTINGS.ARMY_LEVEL, CI_INVASION_STAGES.MID_GAME)] = {value = true, min = 3, max = 6},
+    [CI_setting_keys(CI_SETTINGS.ARMY_LEVEL, CI_INVASION_STAGES.END_GAME)] = {value = true, min = 6, max = 9},
+    
+    -- Army per invasion
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.EMPIRE, CI_ARMY_TYPES.CHAOS)] = {value = true, min = 4, max = 6},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.EMPIRE, CI_ARMY_TYPES.NORSCA)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.EMPIRE, CI_ARMY_TYPES.BEASTMEN)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_ARMY_TYPES.CHAOS)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_ARMY_TYPES.NORSCA)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_ARMY_TYPES.BEASTMEN)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_ARMY_TYPES.CHAOS)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_ARMY_TYPES.NORSCA)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_ARMY_TYPES.BEASTMEN)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.EMPIRE, CI_ARMY_TYPES.CHAOS)] = {value = true, min = 8, max = 12},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.EMPIRE, CI_ARMY_TYPES.NORSCA)] = {value = true, min = 2, max = 4},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.EMPIRE, CI_ARMY_TYPES.BEASTMEN)] = {value = true, min = 1, max = 2},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_ARMY_TYPES.CHAOS)] = {value = true, min = 4, max = 6},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_ARMY_TYPES.NORSCA)] = {value = true, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_ARMY_TYPES.BEASTMEN)] = {value = true, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_ARMY_TYPES.CHAOS)] = {value = true, min = 4, max = 8},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_ARMY_TYPES.NORSCA)] = {value = true, min = 2, max = 4},
+    [CI_setting_keys(CI_SETTINGS.ARMIES_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_ARMY_TYPES.BEASTMEN)] = {value = true, min = 0, max = 1},
+
+    -- Agent per invasion
+    [CI_setting_keys(CI_SETTINGS.AGENT_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.EMPIRE)] = {value = true, min = 2, max = 4},
+    [CI_setting_keys(CI_SETTINGS.AGENT_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.NAGGAROTH)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.AGENT_PER_INVASION, CI_INVASION_STAGES.MID_GAME, CI_INVASION_TYPES.BEASTMEN)] = {value = false, min = 0, max = 0},
+    [CI_setting_keys(CI_SETTINGS.AGENT_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.EMPIRE)] = {value = true, min = 4, max = 6},
+    [CI_setting_keys(CI_SETTINGS.AGENT_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.NAGGAROTH)] = {value = true, min = 1, max = 2},
+    [CI_setting_keys(CI_SETTINGS.AGENT_PER_INVASION, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.BEASTMEN)] = {value = true, min = 1, max = 2},
+
+    -- Number of invasion
+    [CI_setting_keys(CI_SETTINGS.NUMBER_OF_ADDITIONAL_INVASIONS, CI_INVASION_STAGES.MID_GAME)] = {value = false, min = 0, max = 1},
+    [CI_setting_keys(CI_SETTINGS.NUMBER_OF_ADDITIONAL_INVASIONS, CI_INVASION_STAGES.END_GAME)] = {value = true, min = 1, max = 2},
+
+    -- Special character possible 
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.EMPIRE, CI_SPECIAL_CHARACTERS.ARCHAON)] = true,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_SPECIAL_CHARACTERS.ARCHAON)] = false,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_SPECIAL_CHARACTERS.ARCHAON)] = false,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.EMPIRE, CI_SPECIAL_CHARACTERS.KHOLEK)] = true,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_SPECIAL_CHARACTERS.KHOLEK)] = false,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_SPECIAL_CHARACTERS.KHOLEK)] = false,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.EMPIRE, CI_SPECIAL_CHARACTERS.SIGVALD)] = true,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_SPECIAL_CHARACTERS.SIGVALD)] = false,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_SPECIAL_CHARACTERS.SIGVALD)] = false,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.EMPIRE, CI_SPECIAL_CHARACTERS.SARTHORAEL)] = true,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.NAGGAROTH, CI_SPECIAL_CHARACTERS.SARTHORAEL)] = false,
+    [CI_setting_keys(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.ADDITIONAL, CI_SPECIAL_CHARACTERS.SARTHORAEL)] = false,
+
+    [CI_setting_keys(CI_SETTINGS.WINNING_KILL_ARMIES, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.EMPIRE)] = true,
+    [CI_setting_keys(CI_SETTINGS.WINNING_KILL_ARMIES, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.NAGGAROTH)] = true,
+    [CI_setting_keys(CI_SETTINGS.WINNING_KILL_ARMIES, CI_INVASION_STAGES.END_GAME, CI_INVASION_TYPES.ADDITIONAL)] = true,
+}
+
+local function ouput_values(values)
+
+    if not is_table(values) then
+        return tostring(values);
+    else
+        return "Value: "..tostring(values.value)..", min: "..tostring(values.min)..", max"..tostring(values.max);
+    end
+end
+
+
+local function is_from_table(key, table)
+    for _, item in pairs(table) do
+        if item.key == key then
+            return true;
+        end
     end
 
-    return values;
+    return false;
 end
 
 -- Return {value / min / max}
 -- Use CI_load_setting to get the final value of setting instead
-function CI_setting_values(setting, ...)
+function CI_setting_values(setting_key, ...)
     if verbose then
-        GAM_LOG("CI_setting_values("..CI_mct_setting_keys(setting, ...)..")");
+        GAM_LOG("CI_setting_values("..CI_setting_keys(setting_key, ...)..")");
     end
     
-    local values = setting_values(setting, ...);
+    local setting_key = CI_setting_keys(setting_key, ...);
+    local values = settings[setting_key];
 
-    if not values or values.value == nil then
-        GAM_LOG("Error: Values not found for "..CI_mct_setting_keys(setting, ...))
+    if values == nil then
+        GAM_LOG("Error: Values not found for: "..setting_key);
         return;
+    elseif not is_table(values) then
+        return values;
+    else
+        return values.value, values.min, values.max;
     end
-
-    return values.value, values.min, values.max;
 end
 
 -- Return settings value or random between min and max values if randomized
--- Each parameter can be the table item or its key
 function CI_load_setting(setting, ...)
     if verbose then
-        GAM_LOG("CI_load_setting("..CI_mct_setting_keys(setting, ...)..")");
+        GAM_LOG("CI_load_setting("..CI_setting_keys(setting, ...)..")");
     end
     local value, min, max = CI_setting_values(setting, ...);
 
@@ -352,37 +305,28 @@ end
 
 -- Set values (value, min, max) for setting.
 local function save_setting(values, setting, ...)
+
     if verbose then
-        GAM_LOG("save_setting("..table.tostring(values)..","..CI_mct_setting_keys(setting, ...)..")");
+        GAM_LOG("save_setting("..ouput_values(values)..","..CI_setting_keys(setting, ...)..")");
     end
 
-    if values.value == nil then
-        GAM_LOG("Error : Incorrect values format: "..table.tostring(values).." for setting"..CI_mct_setting_keys(setting, ...));
+    if values.value ~= nil and (values.min == nil or values.max == nil) then
+        GAM_LOG("Error : Incorrect values format: "..ouput_values(values).." for setting"..CI_setting_keys(setting, ...));
         return;
     end
 
     local value, min, max = CI_setting_values(setting, ...);
 
     if min ~= nil and values.min == nil then
-        GAM_LOG("Error : Minimum expected: "..table.tostring(values).." for setting"..CI_mct_setting_keys(setting, ...));
+        GAM_LOG("Error : Minimum expected: "..ouput_values(values).." for setting"..CI_setting_keys(setting, ...));
         return;
     end
     if values.min ~= nil and values.max == nil then
-        GAM_LOG("Error : Maximum expected: "..table.tostring(values).." for setting"..CI_mct_setting_keys(setting, ...));
+        GAM_LOG("Error : Maximum expected: "..ouput_values(values).." for setting"..CI_setting_keys(setting, ...));
         return;
     end
 
-    local keys = item_keys(...);
-    
-    for i = 1, #keys do
-        local setting_values = setting.values;
-
-        if i == #keys then
-            setting_values[keys[i]] = values;
-        else
-            setting_values = setting_values[keys[i]];
-        end
-    end
+    CI_SETTINGS[CI_setting_keys(setting, ...)] = values;
 end
 
 -- For settings of type random / min / max, validate and modify settings :
@@ -392,9 +336,9 @@ local function validate_random_setting(setting, ...)
     -- Random settings if min or max is not null and settings is true
     if (min or max) and value then
         if max <= min then
-            local mct_key, mct_mininum_key, mct_maxinum_key = CI_mct_setting_keys(setting, ...)
+            local _, mininum_key, maxinum_key = CI_setting_keys(setting, ...)
 
-            GAM_LOG("Incorrect setting : "..mct_mininum_key.." must be greater than "..mct_maxinum_key);
+            GAM_LOG("Incorrect setting : "..mininum_key.." must be greater than "..maxinum_key);
             local values = {value = false, min = min, max = min}
             save_setting(values, setting, ...);
         end
@@ -403,54 +347,28 @@ end
 
 -- Init setting values from mct setting
 function CI_init_setting(mct_settings, setting, ...)
-
     if verbose then
-        GAM_LOG("init_and_validate_setting(mct_settings,"..CI_mct_setting_keys(setting, ...)..")");
+        GAM_LOG("init_and_validate_setting(mct_settings,"..CI_setting_keys(setting, ...)..")");
     end
-    local values = setting_values(setting, ...);
 
-    -- Error, should not happen
-    if not values then
-        GAM_LOG("Error...")
-        return;
-    end
-    
-    -- Final level
-    if values.value ~= nil then
+    if mct_settings then
+        local key, minimum_key, maximum_key = CI_setting_keys(setting, ...);
 
-        if mct_settings then
-            local mct_key, mct_minimum_key, mct_maximum_key = CI_mct_setting_keys(setting, ...);
-            if verbose then
-                GAM_LOG("init_setting("..mct_key..","..CI_mct_setting_keys(setting, ...)..")");
-            end
-            
-            if not mct_settings then
-                return;
-            end
-            local value = mct_settings[mct_key];
+        local mct_value = mct_settings[key];
+        local mct_min = mct_settings[minimum_key];
+        local mct_max = mct_settings[maximum_key];
 
-            if value == nil then
-                GAM_LOG("Error: MCT Value not found");
-            end
-            
-            local values = {value, mct_settings[mct_minimum_key], mct_settings[mct_maximum_key]};
-            save_setting(values, setting, ...);
+        local values = mct_value;
+
+        if mct_min ~= nil then
+            values = {values = mct_value, min = mct_min, max = mct_max};
         end
 
-        validate_random_setting(setting, ...);
+        CI_SETTINGS[key] = values;
 
-    else
-        -- We init each sublevel
-        for key, _ in pairs(values) do 
-            arg = {...};
-            if not arg or not arg[1] then
-                CI_init_setting(mct_settings, setting, key);
-            else
-                table.insert(arg, key);
-                CI_init_setting(mct_settings, setting, unpack(arg));
-            end
-        end
+        local values = CI_setting_values(setting, ...);
     end
+    validate_random_setting(setting, ...);
 end
 
 -- Validation rules for starting turn
@@ -631,40 +549,3 @@ function CI_init_settings(default_settings)
         init_and_validate_settings();
     end
 end
-
--- Gamergeo log features                 
--- Resets the log on session start.
-function GAM_LOG_RESET()
-    if not __write_output_to_logfile then
-        return;
-    end 
-    local logTimeStamp = os.date("%d, %m %Y %X");
-    --# assume logTimeStamp: string
-    
-    local popLog = io.open("gam_log.txt","w+");
-    
-    if popLog then
-        popLog:write("NEW LOG ["..logTimeStamp.."] \n");
-        popLog:flush();
-        popLog:close();
-    end
-end
-
-function GAM_LOG(text)
-    if not __write_output_to_logfile then
-        return; 
-    end
-
-    local logText = tostring(text);
-    local logTimeStamp = os.date("%d, %m %Y %X");
-    local popLog = io.open("gam_log.txt","a");
-    --# assume logTimeStamp: string
-    if popLog then
-        popLog:write("GAM (chaotic_invasion):  [".. logTimeStamp .. "]:  "..logText .. "  \n");
-        popLog :flush();
-        popLog :close();
-    end
-    out.chaos("GAM (chaotic_invasion): [".. logTimeStamp .. "]:  "..logText .. "  ");
-end
-
---GAM_LOG_RESET();

@@ -5,17 +5,17 @@ GAM_MOD = nil;
 -- Search first for setting key, then recursively search for default
 local function localised_string(setting_key, suffix)
     local localised_string = "";
-    local next_separator = 1;
+    -- local next_separator = 1;
 
-    while localised_string == "" and next_separator do
-        localised_string = effect.get_localised_string("mct_"..gam_mod_name.."_"..setting_key.."_"..suffix);
+    -- while localised_string == "" and next_separator do
+    --     localised_string = effect.get_localised_string("mct_"..gam_mod_name.."_"..setting_key.."_"..suffix);
         
-        next_separator = string.find(setting_key, "_");
+    --     next_separator = string.find(setting_key, "_");
             
-        if next_separator then
-            setting_key = string.sub(setting_key, next_separator + 1);
-        end
-    end
+    --     if next_separator then
+    --         setting_key = string.sub(setting_key, next_separator + 1);
+    --     end
+    -- end
     
     return localised_string;
 end
@@ -29,37 +29,20 @@ local function find_localised_tooltip(setting_key)
 end
 
 local function add_option(setting, invasion_stage, invasion_type, special_type)
-    local setting_key = CI_mct_setting_keys(setting, invasion_stage, invasion_type, special_type);
+    local setting_key = CI_setting_keys(setting, invasion_stage, invasion_type, special_type);
     local option = GAM_MOD:add_new_option(setting_key, "checkbox");
     option:set_default_value(CI_load_setting(setting, invasion_stage, invasion_type, special_type));
 
-    if not core:is_campaign() then
-        local text = find_localised_text(setting_key);
-        option:set_text(text);
-        local tooltip = find_localised_tooltip(setting_key)
-        option:set_tooltip_text(tooltip);
-    else
-        core:add_listener(
-            "GAM_MCT_INIT",
-            "FirstTickAfterWorldCreated",
-            true,
-            function(context)
-                GAM_LOG("Key");
-                GAM_LOG(option.get_key());
-                local text = find_localised_text(setting_key);
-                option:set_text(text);
-                local tooltip = find_localised_tooltip(setting_key)
-                option:set_tooltip_text(tooltip);
-            end,
-            false
-        )
-    end
+    local text = find_localised_text(setting_key);
+    option:set_text(text);
+    local tooltip = find_localised_tooltip(setting_key)
+    option:set_tooltip_text(tooltip);
     
     return option;
 end
 
 local function add_randomizable_options(lower_bound, upper_bound, setting, invasion_stage, invasion_type, special_type)
-    local setting_key, setting_key_minimum, setting_key_maximum  = CI_mct_setting_keys(setting, invasion_stage, invasion_type, special_type);
+    local setting_key, setting_key_minimum, setting_key_maximum  = CI_setting_keys(setting, invasion_stage, invasion_type, special_type);
 
     -- Mod defaults, from CI_SETTINGS
     local value, min, max = CI_setting_values(setting, invasion_stage, invasion_type, special_type);
@@ -67,49 +50,27 @@ local function add_randomizable_options(lower_bound, upper_bound, setting, invas
     local option = GAM_MOD:add_new_option(setting_key, "checkbox");
     option:set_default_value(value);
 
+    option:set_text(find_localised_text(setting_key));
+    local localised_tooltip = find_localised_tooltip(setting_key);
+    if localised_tooltip == "" then
+        option:set_tooltip_text("mct_gam_chaotic_invasion_default_random_tooltip", true);
+    else
+        option:set_tooltip_text(localised_tooltip);
+    end
+
     local option_min = GAM_MOD:add_new_option(setting_key_minimum, "slider");
     option_min:slider_set_step_size(1);
     option_min:slider_set_min_max(lower_bound, upper_bound);
     option_min:set_default_value(min);
+    option_min:set_text(find_localised_text(setting_key_minimum));
+    option_min:set_tooltip_text(find_localised_tooltip(setting_key_minimum));
 
     local option_max = GAM_MOD:add_new_option(setting_key_maximum, "slider");
     option_max:slider_set_step_size(1);
     option_max:slider_set_min_max(lower_bound, upper_bound);
     option_max:set_default_value(max);
-
-    if not core:is_campaign() then
-        option:set_text(find_localised_text(setting_key));
-        local localised_tooltip = find_localised_tooltip(setting_key);
-        if localised_tooltip == "" then
-            option:set_tooltip_text("mct_gam_chaotic_invasion_default_random_tooltip", true);
-        else
-            option:set_tooltip_text(localised_tooltip);
-        end
-        option_min:set_text(find_localised_text(setting_key_minimum));
-        option_min:set_tooltip_text(find_localised_tooltip(setting_key_minimum));
-        option_max:set_text(find_localised_text(setting_key_maximum));
-        option_max:set_tooltip_text(find_localised_tooltip(setting_key_maximum));
-    else
-        core:add_listener(
-            "GAM_MCT_INIT",
-            "FirstTickAfterWorldCreated",
-            true,
-            function(context)
-                option:set_text(find_localised_text(setting_key));
-                local localised_tooltip = find_localised_tooltip(setting_key);
-                if localised_tooltip == "" then
-                    option:set_tooltip_text("mct_gam_chaotic_invasion_default_random_tooltip", true);
-                else
-                    option:set_tooltip_text(localised_tooltip);
-                end
-                option_min:set_text(find_localised_text(setting_key_minimum));
-                option_min:set_tooltip_text(find_localised_tooltip(setting_key_minimum));
-                option_max:set_text(find_localised_text(setting_key_maximum));
-                option_max:set_tooltip_text(find_localised_tooltip(setting_key_maximum));
-            end,
-            false
-        )
-    end
+    option_max:set_text(find_localised_text(setting_key_maximum));
+    option_max:set_tooltip_text(find_localised_tooltip(setting_key_maximum));
 
     return option, option_min, option_max;
 end
@@ -127,7 +88,7 @@ end
 local function add_invasion_options(invasion_stage, invasion_type)
 
     if CI_INVASION_TYPES.ADDITIONAL == invasion_type then
-        add_randomizable_options(0, 5, CI_SETTINGS.NUMBER_OF_INVASIONS, invasion_stage, invasion_type);
+        add_randomizable_options(0, 5, CI_SETTINGS.NUMBER_OF_ADDITIONAL_INVASIONS, invasion_stage, invasion_type);
     end
 
     add_randomizable_options(0, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, invasion_type, CI_ARMY_TYPES.CHAOS);
