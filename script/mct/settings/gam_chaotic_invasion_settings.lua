@@ -28,31 +28,55 @@ local function find_localised_tooltip(setting_key)
     return localised_string(setting_key, "tooltip");
 end
 
+local function option_text_and_tooltip(option)
+    local setting_key = option:get_key();
+    local text = find_localised_text(setting_key);
+    option:set_text(text);
+    local tooltip = find_localised_tooltip(setting_key)
+    option:set_tooltip_text(tooltip);
+end
+
+local function randomized_option_text_and_tooltip(option, option_min, option_max)
+    local setting_key = option:get_key();
+    local setting_key_minimum = option_min:get_key();
+    local setting_key_maximum = option_max:get_key();
+    option:set_text(find_localised_text(setting_key));
+    local localised_tooltip = find_localised_tooltip(setting_key);
+    if localised_tooltip == "" then
+        option:set_tooltip_text("mct_gam_chaotic_invasion_default_random_tooltip", true);
+    else
+        option:set_tooltip_text(localised_tooltip);
+    end
+    option_min:set_text(find_localised_text(setting_key_minimum));
+    option_min:set_tooltip_text(find_localised_tooltip(setting_key_minimum));
+    option_max:set_text(find_localised_text(setting_key_maximum));
+    option_max:set_tooltip_text(find_localised_tooltip(setting_key_maximum));
+end
+
 local function add_option(setting, invasion_stage, invasion_type, special_type)
     local setting_key = CI_mct_setting_keys(setting, invasion_stage, invasion_type, special_type);
     local option = GAM_MOD:add_new_option(setting_key, "checkbox");
     option:set_default_value(CI_load_setting(setting, invasion_stage, invasion_type, special_type));
 
+    -- We can't call effect.get_localised_string before game is init, so we need to do when mct ui is created
+    -- That's the only event i've found that can be late enough to not crash game, and early enough to have text and tooltip
+    -- correctly initialized
     if not core:is_campaign() then
-        local text = find_localised_text(setting_key);
-        option:set_text(text);
-        local tooltip = find_localised_tooltip(setting_key)
-        option:set_tooltip_text(tooltip);
+        option_text_and_tooltip(option);
     else
-        core:add_listener(
-            "GAM_MCT_INIT",
-            "FirstTickAfterWorldCreated",
-            true,
-            function(context)
-                GAM_LOG("Key");
-                GAM_LOG(option.get_key());
-                local text = find_localised_text(setting_key);
-                option:set_text(text);
-                local tooltip = find_localised_tooltip(setting_key)
-                option:set_tooltip_text(tooltip);
-            end,
-            false
-        )
+        
+        core:add_ui_created_callback(function() option_text_and_tooltip(option) end);
+
+        -- core:add_listener(
+        --     "RefreshGamOption"..option:get_key(),
+        --     "FirstTickAfterWorldCreated",
+        --     true,    
+        --     function(context)
+        --         local option = context:option();
+        --         option_text_and_tooltip(option);
+        --     end,
+        --     false
+        -- )
     end
     
     return option;
@@ -78,37 +102,9 @@ local function add_randomizable_options(lower_bound, upper_bound, setting, invas
     option_max:set_default_value(max);
 
     if not core:is_campaign() then
-        option:set_text(find_localised_text(setting_key));
-        local localised_tooltip = find_localised_tooltip(setting_key);
-        if localised_tooltip == "" then
-            option:set_tooltip_text("mct_gam_chaotic_invasion_default_random_tooltip", true);
-        else
-            option:set_tooltip_text(localised_tooltip);
-        end
-        option_min:set_text(find_localised_text(setting_key_minimum));
-        option_min:set_tooltip_text(find_localised_tooltip(setting_key_minimum));
-        option_max:set_text(find_localised_text(setting_key_maximum));
-        option_max:set_tooltip_text(find_localised_tooltip(setting_key_maximum));
+        randomized_option_text_and_tooltip(option, option_min, option_max);
     else
-        core:add_listener(
-            "GAM_MCT_INIT",
-            "FirstTickAfterWorldCreated",
-            true,
-            function(context)
-                option:set_text(find_localised_text(setting_key));
-                local localised_tooltip = find_localised_tooltip(setting_key);
-                if localised_tooltip == "" then
-                    option:set_tooltip_text("mct_gam_chaotic_invasion_default_random_tooltip", true);
-                else
-                    option:set_tooltip_text(localised_tooltip);
-                end
-                option_min:set_text(find_localised_text(setting_key_minimum));
-                option_min:set_tooltip_text(find_localised_tooltip(setting_key_minimum));
-                option_max:set_text(find_localised_text(setting_key_maximum));
-                option_max:set_tooltip_text(find_localised_tooltip(setting_key_maximum));
-            end,
-            false
-        )
+        core:add_ui_created_callback(function() randomized_option_text_and_tooltip(option, option_min, option_max); end);
     end
 
     return option, option_min, option_max;
@@ -122,29 +118,30 @@ local function add_general_options(invasion_stage)
     add_randomizable_options(2, 300, CI_SETTINGS.STARTING_TURN, invasion_stage);
     add_randomizable_options(1, 40, CI_SETTINGS.CHARACTER_LEVEL, invasion_stage);
     add_randomizable_options(0, 9, CI_SETTINGS.ARMY_LEVEL, invasion_stage);
+    add_randomizable_options(0, 50, CI_SETTINGS.AGENT_NUMBER, invasion_stage);
 end
 
 local function add_invasion_options(invasion_stage, invasion_type)
 
     if CI_INVASION_TYPES.ADDITIONAL == invasion_type then
-        add_randomizable_options(0, 5, CI_SETTINGS.NUMBER_OF_INVASIONS, invasion_stage, invasion_type);
+        add_randomizable_options(0, 5, CI_SETTINGS.ADDITIONAL_INVASION_NUMBER, invasion_stage);
     end
 
     add_randomizable_options(0, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, invasion_type, CI_ARMY_TYPES.CHAOS);
     add_randomizable_options(0, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, invasion_type, CI_ARMY_TYPES.NORSCA);
     add_randomizable_options(0, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, invasion_type, CI_ARMY_TYPES.BEASTMEN);
-    add_randomizable_options(0, 50, CI_SETTINGS.AGENT_PER_INVASION, invasion_stage, invasion_type);
 
     if CI_INVASION_STAGES.END_GAME == invasion_stage then
         add_option(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, invasion_stage, invasion_type, CI_SPECIAL_CHARACTERS.ARCHAON);
         add_option(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, invasion_stage, invasion_type, CI_SPECIAL_CHARACTERS.KHOLEK);
         add_option(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, invasion_stage, invasion_type, CI_SPECIAL_CHARACTERS.SIGVALD);
         add_option(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, invasion_stage, invasion_type, CI_SPECIAL_CHARACTERS.SARTHORAEL);
+        add_option(CI_SETTINGS.WINNING_KILL_ARMIES, invasion_type);
     end
 
 end
 
-local function add_section(invasion_stage, invasion_type)
+local function add_staged_section(invasion_stage, invasion_type)
     local section_name = "";
 
     if not invasion_type then
@@ -164,9 +161,22 @@ local function add_section(invasion_stage, invasion_type)
 end
 
 local function add_invasion_sections(invasion_stage)
-    add_section(invasion_stage, CI_INVASION_TYPES.EMPIRE);
-    add_section(invasion_stage, CI_INVASION_TYPES.NAGGAROTH);
-    add_section(invasion_stage, CI_INVASION_TYPES.ADDITIONAL);
+    add_staged_section(invasion_stage, CI_INVASION_TYPES.EMPIRE);
+    add_staged_section(invasion_stage, CI_INVASION_TYPES.NAGGAROTH);
+    add_staged_section(invasion_stage, CI_INVASION_TYPES.ADDITIONAL);
+end
+
+local function add_location_section()
+    local section = GAM_MOD:add_new_section("location");
+    section:set_option_sort_function("index_sort");
+    add_option(CI_SETTINGS.KEEP_SAME_LOCATION);
+    add_option(CI_SETTINGS.SAME_LOCATION_POSSIBLE);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.EMPIRE);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.NAGGAROTH);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.LUSTRIA);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.VAMPIRE_COAST);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.SEA_OF_SERPENTS);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.FAR_EAST);
 end
 
 core:load_mod_script("/script/_lib/mod/gam_lib_chaos_invasion.lua");
@@ -176,11 +186,11 @@ GAM_LOG("Register MCT Mod");
 GAM_MOD:set_section_sort_function("index_sort");
 add_option(CI_SETTINGS.INVASIONS_ACTIVATED);
 -- Stage General settings
-add_section(CI_INVASION_STAGES.MID_GAME);
-add_section(CI_INVASION_STAGES.END_GAME);
+add_staged_section(CI_INVASION_STAGES.MID_GAME);
+add_staged_section(CI_INVASION_STAGES.END_GAME);
+add_location_section();
 add_invasion_sections(CI_INVASION_STAGES.MID_GAME);
 add_invasion_sections(CI_INVASION_STAGES.END_GAME);
-
 
 
 -- In campaign, we can't init options now cause effect.get_localised_string make game crash..

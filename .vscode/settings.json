@@ -10,6 +10,7 @@
         "__write_output_to_logfile",
         "get_mct",
         "mct",
-        "effect"
+        "effect",
+        "CI_personality_swap"
     ]
 }

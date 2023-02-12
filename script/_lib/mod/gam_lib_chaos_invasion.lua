@@ -45,6 +45,70 @@ CI_ARMY_TYPES = {
     }
 }
 
+CI_LOCATIONS = {
+    EMPIRE = {
+        key = CI_INVASION_TYPES.EMPIRE.key,
+        main_position = {775, 609}, -- Position for special character / message
+        [CI_ARMY_TYPES.CHAOS.key] = {
+            next = 1,
+            positions = {
+                {775, 609+5}, {770, 611+5}, {780, 611+5},
+                {775, 609+10}, {770, 611+10}, {780, 611+10},
+                {775, 609+15}, {770, 611+15}, {780, 611+15},
+                {775, 609+20}, {770, 611+20}, {780, 611+20},
+                {775, 609+25}, {770, 611+25}, {780, 611+25}
+            }
+         },
+         [CI_ARMY_TYPES.NORSCA.key] = {
+            positions = {
+                {630, 680},	{697, 659}, {588, 708}, {540, 698}, {520, 693}, {494, 675}, {411, 673}, {374, 644},
+                {420, 625}, {447, 639}, {519, 662}, {589, 688}, {495, 635}, {437, 610},
+                {504, 609}, {448, 589}, {377, 565}
+            }
+         },
+         [CI_ARMY_TYPES.BEASTMEN.key] = {
+            positions = {
+                {788, 605}
+            }
+         }
+    },
+    NAGGAROTH = {
+        key = CI_INVASION_TYPES.NAGGAROTH.key,
+        next = 1,
+        positions = {
+            {49, 712}, {91, 712}, {130, 711}, {172, 713}, {213, 710}
+        }
+    },
+    LUSTRIA = {
+        key = "lustria",
+        positions = {
+            {282, 15}, {307, 24}
+        }
+    },
+    SEA_OF_SERPENTS = {
+        key = "sea_of_serpents",
+        positions = {
+            {125, 240}, {140, 250}
+        }
+    },
+    VAMPIRE_COAST = {
+        key = "vampire_coast",
+        positions = {
+            {470, 155}, {510, 175}
+        }
+    },
+    FAR_EAST = {
+        key = "far_east",
+        positions = {
+            {890, 150}, {910, 160}
+        }
+    }
+}
+
+-- table to track where additional invasion will be swapn. Use for messages in intro phases.
+-- only keys there
+local additional_invasion_locations = {};
+
 -- Chaotic invasion settings
 -- I really prefer to work with objects and linked enums so i make this, to connect mct and main lua script
 -- key represents the mct key for setting
@@ -54,12 +118,16 @@ CI_ARMY_TYPES = {
 --                 character level maximum on second phase would be CI_SETTINGS[CHARACTER_LEVEL].values.end.max
 --                 minimum number of norsca armies on first phase in naggaroth would be CI_SETTINGS[ARMIES_PER_INVASION].values.mid.naggaroth.norsca.minimum
 -- Instead of accessing values directly, use CI_load_setting instead
-
--- Maybe one day i'll make a proper ci_setting class with metatable but not sure if it's not too much
 CI_SETTINGS = {
 
     -- Is chaos invasion mechanism activated
     INVASIONS_ACTIVATED = {key = "invasions_activated", values = {value = true}},
+
+    -- Can two additional invasions spawn in same place
+    SAME_LOCATION_POSSIBLE = {key = "same_location_possible", values = {value = false}},
+
+    -- Additional invasion will have the same location for both stages of invasion
+    KEEP_SAME_LOCATION = {key = "keep_same_location", values = {value = false}},
 
     -- Starting turn of invasion stages
     STARTING_TURN = {
@@ -88,6 +156,16 @@ CI_SETTINGS = {
             [CI_INVASION_STAGES.MID_GAME.key] = {value = true, min = 3, max = 6},
             [CI_INVASION_STAGES.END_GAME.key] = {value = true, min = 6, max = 9}
         }
+    },
+
+    -- Number of agent per invasion
+    -- Stage and invasion type dependent
+    AGENT_NUMBER = {
+        key = "agent_number",
+        values = {
+            [CI_INVASION_STAGES.MID_GAME.key] = {value = true, min = 2, max = 4},
+            [CI_INVASION_STAGES.END_GAME.key] = {value = true, min = 4, max = 6} 
+       }
     },
 
     -- Is specific invasion activated
@@ -150,36 +228,14 @@ CI_SETTINGS = {
         }
     },
 
-    -- Number of agent per invasion
-    -- Stage and invasion type dependent
-    AGENT_PER_INVASION = {
-        key = "agent_per_invasion",
-        values = {
-            [CI_INVASION_STAGES.MID_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true, min = 2, max = 4},
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = false, min = 0, max = 0},
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = false, min = 0, max = 0}
-            },
-            [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true, min = 4, max = 6},
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = true, min = 1, max = 2},
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true, min = 1, max = 2}
-            },
-        }
-    },
-
     -- Number of additional invasion
     -- Stage and invasion type dependent
     -- Only for additional invasion type
-    NUMBER_OF_INVASIONS = {
-        key = "number_of_invasions",
+    ADDITIONAL_INVASION_NUMBER = {
+        key = "additional_invasion_number",
         values = {
-            [CI_INVASION_STAGES.MID_GAME.key] = {
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = false, min = 0, max = 0}
-            },
-            [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true, min = 1, max = 2}
-            },
+            [CI_INVASION_STAGES.MID_GAME.key] = {value = false, min = 0, max = 0},
+            [CI_INVASION_STAGES.END_GAME.key] = {value = true, min = 1, max = 2}
         }
     },
 
@@ -216,24 +272,23 @@ CI_SETTINGS = {
     WINNING_KILL_ARMIES = {
         key = "winning_kill_armies",
         values = {
-            [CI_INVASION_STAGES.END_GAME.key] = {
-                [CI_INVASION_TYPES.EMPIRE.key] = {value = true},
-                [CI_INVASION_TYPES.NAGGAROTH.key] = {value = true},
-                [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true}
-            },
+            [CI_INVASION_TYPES.EMPIRE.key] = {value = true},
+            [CI_INVASION_TYPES.NAGGAROTH.key] = {value = true},
+            [CI_INVASION_TYPES.ADDITIONAL.key] = {value = true}
         }
     },
 
-    -- Can two additional invasions spawn in same place
-    SAME_LOCATION_POSSIBLE = {
-        key = "same_location_possible",
-        values = {value = false}
-    },
-
+    -- Is location activated
+    -- Only for additional
     LOCATION_ACTIVATED = {
         key = "location_activated",
         values = {
-       --     [CI_ADDITIONAL_LOCATIONS.TEST.key] = {value = true},
+            [CI_LOCATIONS.EMPIRE.key] = {value = false},
+            [CI_LOCATIONS.NAGGAROTH.key] = {value = false},
+            [CI_LOCATIONS.LUSTRIA.key] = {value = true},
+            [CI_LOCATIONS.VAMPIRE_COAST.key] = {value = true},
+            [CI_LOCATIONS.SEA_OF_SERPENTS.key] = {value = true},
+            [CI_LOCATIONS.FAR_EAST.key] = {value = true}
         }
     }
 }
@@ -267,6 +322,35 @@ local function item_keys(...)
     end
 
     return keys;
+end
+
+local function item_key(item)
+    return item_keys(item)[1];
+end
+
+local function output_values(values) 
+    if not values then
+        return "nil";
+    elseif values.min ~= nil then
+        return tostring(values.value)..", min:"..tostring(values.min)..", max: "..tostring(values.max);
+    else
+        return tostring(values.value);
+    end
+end
+
+local function output_params(...)
+    local keys = item_keys(...);
+    local output = "";
+
+    for i = 1, #keys do
+        
+        if i == 1 then
+            output = keys[1];
+        else
+            output = output..", "..keys[i];
+        end
+    end
+    return output;
 end
 
 -- Return MCT setting keys (type value / min / max)
@@ -320,69 +404,88 @@ end
 -- Return {value / min / max}
 -- Use CI_load_setting to get the final value of setting instead
 function CI_setting_values(setting, ...)
-    if verbose then
-        GAM_LOG("CI_setting_values("..CI_mct_setting_keys(setting, ...)..")");
-    end
+    GAM_LOG_INFO("CI_setting_values("..output_params(setting, ...)..")");
     
     local values = setting_values(setting, ...);
 
     if not values or values.value == nil then
-        GAM_LOG("Error: Values not found for "..CI_mct_setting_keys(setting, ...))
+        GAM_LOG("Error: Values not found for "..output_params(setting, ...))
         return;
     end
 
     return values.value, values.min, values.max;
 end
 
--- Return settings value or random between min and max values if randomized
+-- Return settings value or random between min and max values or min if randomized setting
 -- Each parameter can be the table item or its key
 function CI_load_setting(setting, ...)
-    if verbose then
-        GAM_LOG("CI_load_setting("..CI_mct_setting_keys(setting, ...)..")");
-    end
+    GAM_LOG_INFO("CI_load_setting("..output_params(setting, ...)..")");
+
     local value, min, max = CI_setting_values(setting, ...);
 
     -- Random settings if min or max is not null and settings is at true
-    if (min or max) and value then
-        return cm:random_number(max, min);
+    if min ~= nil then
+        if value then
+            return cm:random_number(max, min);
+        else
+            return min;
+        end
     end
+
+    GAM_LOG_INFO("Return "..tostring(value));
 
     return value;
 end
 
--- Set values (value, min, max) for setting.
-local function save_setting(values, setting, ...)
-    if verbose then
-        GAM_LOG("save_setting("..table.tostring(values)..","..CI_mct_setting_keys(setting, ...)..")");
-    end
+-- Force save values (value, min, max) for setting. Does not verify pre-existence of values (useful for create new settings ingame)
+local function force_save_setting(values, setting, ...)
+    GAM_LOG_INFO("force_save_setting("..output_values(values)..","..output_params(setting, ...)..")");
 
     if values.value == nil then
-        GAM_LOG("Error : Incorrect values format: "..table.tostring(values).." for setting"..CI_mct_setting_keys(setting, ...));
+        GAM_LOG("Error : Incorrect values format: "..output_values(values).." for setting"..output_params(setting, ...));
+        return;
+    end
+
+    local keys = item_keys(...);
+
+    local setting_values = setting.values;
+
+    if keys == {} then
+        setting.values = {value = values.value, min = values.min, max = values.max}
+    else
+        for i = 1, #keys do
+
+            if i == #keys then
+                setting_values[keys[i]] = {value = values.value, min = values.min, max = values.max}
+            else
+                setting_values = setting_values[keys[i]];
+            end
+        end
+    end
+end
+
+
+-- Set values (value, min, max) for setting.
+local function save_setting(values, setting, ...)
+    GAM_LOG_INFO("save_setting("..output_values(values)..","..output_params(setting, ...)..")");
+
+    if values.value == nil then
+        GAM_LOG("Error : Incorrect values format: "..output_values(values).." for setting"..output_params(setting, ...));
         return;
     end
 
     local value, min, max = CI_setting_values(setting, ...);
 
     if min ~= nil and values.min == nil then
-        GAM_LOG("Error : Minimum expected: "..table.tostring(values).." for setting"..CI_mct_setting_keys(setting, ...));
+        GAM_LOG("Error : Minimum expected: "..output_values(values).." for setting"..output_params(setting, ...));
         return;
     end
     if values.min ~= nil and values.max == nil then
-        GAM_LOG("Error : Maximum expected: "..table.tostring(values).." for setting"..CI_mct_setting_keys(setting, ...));
+        GAM_LOG("Error : Maximum expected: "..output_values(values).." for setting"..output_params(setting, ...));
         return;
     end
 
-    local keys = item_keys(...);
-    
-    for i = 1, #keys do
-        local setting_values = setting.values;
-
-        if i == #keys then
-            setting_values[keys[i]] = values;
-        else
-            setting_values = setting_values[keys[i]];
-        end
-    end
+    force_save_setting(values, setting, ...);
 end
 
 -- For settings of type random / min / max, validate and modify settings :
@@ -391,7 +494,7 @@ local function validate_random_setting(setting, ...)
     local value, min, max = CI_setting_values(setting, ...);
     -- Random settings if min or max is not null and settings is true
     if (min or max) and value then
-        if max <= min then
+        if max < min then
             local mct_key, mct_mininum_key, mct_maxinum_key = CI_mct_setting_keys(setting, ...)
 
             GAM_LOG("Incorrect setting : "..mct_mininum_key.." must be greater than "..mct_maxinum_key);
@@ -402,11 +505,9 @@ local function validate_random_setting(setting, ...)
 end
 
 -- Init setting values from mct setting
+-- gobal method cause of recursivity in lua
 function CI_init_setting(mct_settings, setting, ...)
-
-    if verbose then
-        GAM_LOG("init_and_validate_setting(mct_settings,"..CI_mct_setting_keys(setting, ...)..")");
-    end
+    GAM_LOG_INFO("CI_init_setting(mct_settings,"..output_params(setting, ...)..")");
     local values = setting_values(setting, ...);
 
     -- Error, should not happen
@@ -420,9 +521,6 @@ function CI_init_setting(mct_settings, setting, ...)
 
         if mct_settings then
             local mct_key, mct_minimum_key, mct_maximum_key = CI_mct_setting_keys(setting, ...);
-            if verbose then
-                GAM_LOG("init_setting("..mct_key..","..CI_mct_setting_keys(setting, ...)..")");
-            end
             
             if not mct_settings then
                 return;
@@ -433,22 +531,19 @@ function CI_init_setting(mct_settings, setting, ...)
                 GAM_LOG("Error: MCT Value not found");
             end
             
-            local values = {value, mct_settings[mct_minimum_key], mct_settings[mct_maximum_key]};
-            save_setting(values, setting, ...);
+            local setting_values = {value = value, min = mct_settings[mct_minimum_key], max = mct_settings[mct_maximum_key]};
+            save_setting(setting_values, setting, ...);
         end
 
         validate_random_setting(setting, ...);
 
     else
+
         -- We init each sublevel
         for key, _ in pairs(values) do 
-            arg = {...};
-            if not arg or not arg[1] then
-                CI_init_setting(mct_settings, setting, key);
-            else
-                table.insert(arg, key);
-                CI_init_setting(mct_settings, setting, unpack(arg));
-            end
+            local arg = {...};
+            table.insert(arg, key);
+            CI_init_setting(mct_settings, setting, unpack(arg));
         end
     end
 end
@@ -498,7 +593,7 @@ local function validate_settings_starting_turn()
     end
 
     local intro_values = {value = true, min = intro_turn_min, max = intro_turn_max};
-    save_setting(intro_values, CI_SETTINGS.STARTING_TURN, CI_INVASION_STAGES.INTRO);
+    force_save_setting(intro_values, CI_SETTINGS.STARTING_TURN, CI_INVASION_STAGES.INTRO);
 end
 
 -- Validation rules for IS_ACTIVATED
@@ -532,7 +627,7 @@ local function validate_settings_activated()
 
             if only_additional_activated then
                 
-                local invasions, invasions_min, invasions_max = CI_setting_values(CI_SETTINGS.NUMBER_OF_INVASIONS, invasion_stage, CI_INVASION_TYPES.ADDITIONAL);
+                local invasions, invasions_min, invasions_max = CI_setting_values(CI_SETTINGS.ADDITIONAL_INVASION_NUMBER, invasion_stage);
 
                 if invasions_min < 1 then
                     GAM_LOG("Incorrect setting: Only additional invasion activated, minimum additional invasion must be greather than 1");
@@ -545,7 +640,7 @@ local function validate_settings_activated()
                 end
 
                 local values = {invasions, invasions_min, invasions_max};
-                save_setting(values, CI_SETTINGS.NUMBER_OF_INVASIONS, invasion_stage, CI_INVASION_TYPES.ADDITIONAL);
+                save_setting(values, CI_SETTINGS.ADDITIONAL_INVASION_NUMBER, invasion_stage);
             end
         end
     end
@@ -632,6 +727,130 @@ function CI_init_settings(default_settings)
     end
 end
 
+local function already_selected_location(location)
+    local location_key = item_key(location);
+
+    local already_selected = false;
+    for i = 1, #additional_invasion_locations do
+        if additional_invasion_locations[i] == location_key then
+            already_selected = true;
+        end
+    end
+    return already_selected;
+end
+
+-- Return a random location, allowed by settings
+local function additional_location()
+
+    local available_location = {};
+    local index = 1;
+
+    for _, location in pairs(CI_LOCATIONS) do
+        
+        -- Location is activated
+        if CI_load_setting(CI_SETTINGS.LOCATION_ACTIVATED, location) then
+            
+            -- Impossible to have different invasion in the same place
+            if not CI_load_setting(CI_SETTINGS.SAME_LOCATION_POSSIBLE) or not already_selected_location(location) then
+                available_location[index] = location;
+            end
+        end
+    end
+
+    local random_number = cm:random_number(#available_location);
+    local selected_location = available_location[random_number];
+
+    if not selected_location then
+        GAM_LOG("Error: not enough location, default one is set");
+        selected_location = CI_LOCATIONS.LUSTRIA;
+    end
+
+    table.insert(additional_invasion_locations, selected_location.key);
+
+    return selected_location;
+end
+
+-- Position features
+
+-- Return next location for giver param
+-- location format : - key
+--                   - positions or army_type.positions
+--                   - main_position
+function CI_location(invasion_type)
+    local invasion_type_key = item_key(invasion_type);
+    GAM_LOG_INFO("CI_location("..output_params(invasion_type)..")");
+
+    local location;
+    
+    if CI_INVASION_TYPES.EMPIRE.key == invasion_type_key then
+        location = CI_LOCATIONS.EMPIRE;
+        GAM_LOG("empire loc");
+    elseif CI_INVASION_TYPES.NAGGAROTH.key == invasion_type_key then
+        location = CI_LOCATIONS.NAGGAROTH;
+    else
+        location = additional_location();
+        GAM_LOG("add loc");
+    end
+
+    -- Reset location
+    if location.next ~= nil then
+        location.next = 1;
+    else 
+        for _, army_location in pairs(location) do
+            if army_location.next ~= nil then
+                army_location.next = 1
+            end
+        end
+    end
+
+    GAM_LOG_INFO("Find location: "..location.key);
+
+    return location;
+end
+
+-- Return next coordonates for given location
+-- Depending cases, can be random or ordored
+function CI_next_position(location, army_type)
+    GAM_LOG_INFO("CI_next_position(location)");
+
+    if location.positions == nil then
+        if not army_type then
+            GAM_LOG("Error : army_type not given but mandatory for "..location.key);
+        end
+
+        location = location[item_key(army_type)];
+    end
+
+    if not location.positions then
+        GAM_LOG("Error: Incorrect location provided");
+        return; 
+    end
+
+    local next_position;
+
+    if location.next then
+        local next = location.next;
+        next_position = location.positions[next];
+        next = next + 1;
+        
+        if next > #location.positions then
+            next = 1;
+        end
+        
+        location.next = next;
+    else
+        local rand_position = cm:random_number(#location.positions);
+        next_position = location.positions[rand_position];
+    end
+    
+    if not next_position then
+        GAM_LOG("Error: Next position not found.");
+    end
+    
+    return next_position;
+end
+
+
 -- Gamergeo log features                 
 -- Resets the log on session start.
 function GAM_LOG_RESET()
@@ -667,4 +886,10 @@ function GAM_LOG(text)
     out.chaos("GAM (chaotic_invasion): [".. logTimeStamp .. "]:  "..logText .. "  ");
 end
 
---GAM_LOG_RESET();
+function GAM_LOG_INFO(text)
+    if verbose then
+        GAM_LOG(text);
+    end
+end
+
+GAM_LOG_RESET();

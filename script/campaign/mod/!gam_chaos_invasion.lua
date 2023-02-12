@@ -49,8 +49,8 @@ local function next_stage()
 end
 
 -- Return the setting value for current stage
-local function load_setting_for_current_stage(setting, invasion_type, special_type)
-    return CI_load_setting(setting, current_stage(), invasion_type, special_type);
+local function load_setting_for_current_stage(setting, ...)
+	return CI_load_setting(setting, current_stage(), ...);
 end
 
 local function force_name(item)
@@ -106,7 +106,7 @@ function CI_setup()
 			end, 1);
 		end
  
-		if CI_setting_values(CI_SETTINGS.INVASION_ACTIVATED) then
+		if CI_load_setting(CI_SETTINGS.INVASIONS_ACTIVATED) then
 			GAM_LOG("Creating Script Listeners");
 			core:add_listener(
 				"CI_FactionTurnStart",
@@ -176,7 +176,7 @@ function CI_FactionTurnStart(context)
             GAM_LOG("\tFirst Possible Turn: "..turn_min);
             GAM_LOG("\tLast Possible Turn: "..turn_max);
             GAM_LOG("\tTurns Early: "..CI_DATA.CI_EARLY_TURNS);
-            GAM_LOG("\tCurrent starting turn: "..turn_start.."%");
+            GAM_LOG("\tCurrent starting turn: "..turn_start);
 
             if turn_start <= turn_number then
                 GAM_LOG("\t\tSuccess!");
@@ -240,8 +240,8 @@ function CI_Event_2_MidGame()
 			"event_feed_strings_text_wh_event_feed_string_scripted_event_chaos_invasion_mid_primary_detail",
 			"",
 			"event_feed_strings_text_wh_event_feed_string_scripted_event_chaos_invasion_mid_secondary_detail",
-			CI_SPECIAL_CHARACTERS["archaon"]["spawn_pos_center"].x, -- TODO
-			CI_SPECIAL_CHARACTERS["archaon"]["spawn_pos_center"].y, -- TODO
+			CI_LOCATIONS.EMPIRE.main_position[1], -- TODO
+			CI_LOCATIONS.EMPIRE.main_position[2],
 			true, 30
 		);
 		GAM_LOG("Showing Chaos Event : "..human_factions[i]);
@@ -253,7 +253,7 @@ function CI_Event_2_MidGame()
 	--CI_spawn_agents(event.agent_spawns);
 	--CI_declare_war(CI_CHAOS_ARMY_SPAWNS.faction_key);
 	CI_apply_chaos_corruption();
-	--CI_personality_swap(2);
+	CI_personality_swap(2);
 	cm:set_camera_position(518.37, 473.95, 10.83, 0.0, 11.30);
 	out.dec_tab("chaos");
 end
@@ -262,11 +262,14 @@ function CI_Event_3_EndGame()
 	GAM_LOG("CI_Event_3_EndGame");
     CI_DATA.CI_INVASION_STAGE = CI_INVASION_STAGES.END_GAME.index;
     
+	CI_personality_swap(3);
 	CI_apply_chaos_corruption();
 end
 
 function CI_Event_4_Victory()
 	GAM_LOG("CI_Event_4_Victory");
+
+	CI_personality_swap(4);
     CI_DATA.CI_INVASION_STAGE = CI_INVASION_STAGES.VICTORY.index;
 end
 
@@ -276,7 +279,15 @@ function CI_spawn_invasions()
 
     for _, invasion_type in pairs(CI_INVASION_TYPES) do
         if load_setting_for_current_stage(CI_SETTINGS.IS_ACTIVATED, invasion_type) then
-            CI_spawn_invasion(invasion_type);
+
+			if CI_INVASION_TYPES.ADDITIONAL ~= invasion_type then
+				CI_spawn_invasion(invasion_type);
+			else
+				for i = 1, load_setting_for_current_stage(CI_SETTINGS.ADDITIONAL_INVASION_NUMBER) do
+					CI_spawn_invasion(invasion_type);
+				end
+			end
+
         end
     end
     
@@ -286,25 +297,36 @@ end
 -- Spawn invasion for invasion_type (Empire, Naggaroth, Additionnal)
 function CI_spawn_invasion(invasion_type)
     GAM_LOG("CI_spawn_invasion("..invasion_type.key..")");
+	out.inc_tab("chaos");
+	local location = CI_location(invasion_type);
+	GAM_LOG("Spawn "..invasion_type.key.." invasion in "..location.key);
     
     for _, army_type in pairs(CI_ARMY_TYPES) do
         local number_armies = load_setting_for_current_stage(CI_SETTINGS.ARMIES_PER_INVASION, invasion_type, army_type);
+		if number_armies then
+			GAM_LOG("Spawn "..number_armies.." "..army_type.key.." armies.");
+		else
+			GAM_LOG("No "..army_type.key.." army.");
+		end
+		out.inc_tab("chaos");
         
         for _ = 1, number_armies do
             --TODO
             local faction_key = army_type.main_faction_key;
-            --TODO
-            local position = CI_get_next_position(CI_LOCATIONS.EMPIRE);
+            local position = CI_next_position(location, army_type);
             local char_level = load_setting_for_current_stage(CI_SETTINGS.CHARACTER_LEVEL);
             local army_level = load_setting_for_current_stage(CI_SETTINGS.ARMY_LEVEL);
             
-            CI_spawn_army(faction_key, army_type, position, 20, 9);
+            CI_spawn_army(faction_key, army_type, position, char_level, army_level);
         end
+		out.dec_tab("chaos");
     end
+	
+	out.dec_tab("chaos");
 end
 
 function CI_spawn_army(faction_key, army_type, position, char_level, army_level)
-    GAM_LOG("CI_spawn_army("..faction_key..","..army_type.key..",["..position[1]..","..position[2].."],"..char_level..","..army_level..")");
+    GAM_LOG_INFO("CI_spawn_army("..faction_key..","..army_type.key..",["..position[1]..","..position[2].."],"..char_level..","..army_level..")");
     
     local x, y = cm:find_valid_spawn_location_for_character_from_position(faction_key, position[1], position[2], true);
     
@@ -464,7 +486,6 @@ cm:add_loading_game_callback(
 	function(context)
 		if cm:is_new_game() == false then
 			CI_DATA = cm:load_named_value("CI_DATA", CI_DATA, context);
-            GAM_LOG("TODELETE : "..current_stage().key);
 		end
 	end
 );
