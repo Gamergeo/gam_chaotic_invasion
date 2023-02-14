@@ -191,28 +191,3 @@ add_staged_section(CI_INVASION_STAGES.END_GAME);
 add_location_section();
 add_invasion_sections(CI_INVASION_STAGES.MID_GAME);
 add_invasion_sections(CI_INVASION_STAGES.END_GAME);
-
-
--- In campaign, we can't init options now cause effect.get_localised_string make game crash..
--- if not core:is_campaign() then
---     GAM_MOD = get_mct():register_mod(gam_mod_name);
---     GAM_MCT_INIT();
--- else
---     core:add_listener(
---         "GAM_MCT_INIT",
---         "FirstTickAfterWorldCreated",
---         true,
---         function(context)
---             GAM_LOG("Trigger");
---             GAM_MOD = get_mct():register_mod(gam_mod_name);
---             GAM_MCT_INIT();
---             get_mct():load_mods();
---         end,
---         false
---     )
-
--- end
-
--- Pour chaque position, empire compris, on veut demander si c'est popo
---local section = GAM_MOD:add_new_section(section_name);
---section:set_option_sort_function("index_sort");

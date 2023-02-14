@@ -1,5 +1,5 @@
 -- For logging features, you still need to activate log debugging
-local verbose = true;
+local verbose = false;
 
 CI_INVASION_STAGES = {
     START = {key = "start", index = 0}, -- Before intro stage
@@ -27,21 +27,41 @@ CI_ARMY_TYPES = {
         key = "chaos",
         effect_bundle = "wh_main_bundle_military_upkeep_free_force",
         buildings = {"wh_main_horde_chaos_settlement_3", "wh_main_horde_chaos_warriors_2", "wh_main_horde_chaos_forge_1"},
-        main_faction_key = "wh_main_chs_chaos",
-        other_faction_key = ""
+        faction_keys = {
+            [CI_INVASION_TYPES.]
+            "wh_main_chs_chaos",
+            "wh2_main_chs_chaos_incursion_def", 
+            "wh2_main_chs_chaos_incursion_lzd",
+            "wh2_main_chs_chaos_incursion_hef",
+            "wh_main_chs_chaos_qb1",
+            "wh_main_chs_chaos_qb2",
+            "wh_main_chs_chaos_qb3"
+        }
     },
     NORSCA = {
         key = "norsca",
         effect_bundle = "wh_main_bundle_military_upkeep_free_force",
-        main_faction_key = "wh_main_nor_bjornling",
-        other_faction_key = ""
+        faction_keys = {
+            "wh_main_nor_bjornling",
+            "wh_main_nor_norsca_qb1",
+            "wh_main_nor_norsca_qb2",
+            "wh_main_nor_norsca_qb3",
+            "wh2_dlc11_nor_norsca_qb4"
+            -- TODO fine one more
+        }
     },
     BEASTMEN = {
         key = "beastmen",
         effect_bundle = "wh_main_bundle_military_upkeep_free_force",
         buildings = {"wh_dlc03_horde_beastmen_herd_5", "wh_dlc03_horde_beastmen_gors_3", "wh_dlc03_horde_beastmen_minotaurs_1"},
-        main_faction_key = "wh_dlc03_bst_beastmen_chaos",
-        other_faction_key = ""
+        faction_keys = {
+            "wh_dlc03_bst_beastmen_chaos",
+            "wh_dlc03_bst_beastmen_qb2",
+            "wh2_dlc17_bst_beastmen_qb4",
+            "wh2_dlc17_bst_beastmen_qb5",
+            "wh2_dlc17_bst_beastmen_qb6"
+            -- TODO find more
+        }
     }
 }
 
@@ -68,39 +88,53 @@ CI_LOCATIONS = {
          },
          [CI_ARMY_TYPES.BEASTMEN.key] = {
             positions = {
-                {788, 605}
+                -- TODO
+                {788, 605}, {778, 605}, {793, 605}
             }
          }
     },
     NAGGAROTH = {
         key = CI_INVASION_TYPES.NAGGAROTH.key,
-        next = 1,
-        positions = {
-            {49, 712}, {91, 712}, {130, 711}, {172, 713}, {213, 710}
-        }
+        
+        [CI_ARMY_TYPES.CHAOS.key] = {
+            next = 1,
+            positions = {
+                {49, 712}, {91, 712}, {130, 711}, {172, 713}, {213, 710}
+            }
+        },
+        [CI_ARMY_TYPES.NORSCA.key] = {
+            positions = { --TODO
+                {59, 712}, {101, 712}, {140, 711}, {182, 713}, {223, 710}
+            },
+        },
+        [CI_ARMY_TYPES.BEASTMEN.key] = {
+            positions = {--TODO
+                {49, 700}, {91, 700}, {130, 700}, {172, 700}, {213, 700}
+            }
+        },
     },
     LUSTRIA = {
         key = "lustria",
         positions = {
-            {282, 15}, {307, 24}
+            {282, 15}, {307, 24}, {282, 24}, {307, 15}
         }
     },
     SEA_OF_SERPENTS = {
         key = "sea_of_serpents",
         positions = {
-            {125, 240}, {140, 250}
+            {125, 240}, {140, 250}, {125, 250}, {125, 250}
         }
     },
     VAMPIRE_COAST = {
         key = "vampire_coast",
         positions = {
-            {470, 155}, {510, 175}
+            {470, 155}, {510, 175}, {510, 155}, {470, 175}
         }
     },
     FAR_EAST = {
         key = "far_east",
         positions = {
-            {890, 150}, {910, 160}
+            {890, 150}, {910, 160}, {910, 150}, {890, 160}
         }
     }
 }
@@ -742,8 +776,9 @@ end
 -- Return a random location, allowed by settings
 local function additional_location()
 
-    local available_location = {};
+    local available_locations = {};
     local index = 1;
+    local same_location_possible = CI_load_setting(CI_SETTINGS.SAME_LOCATION_POSSIBLE);
 
     for _, location in pairs(CI_LOCATIONS) do
         
@@ -751,14 +786,15 @@ local function additional_location()
         if CI_load_setting(CI_SETTINGS.LOCATION_ACTIVATED, location) then
             
             -- Impossible to have different invasion in the same place
-            if not CI_load_setting(CI_SETTINGS.SAME_LOCATION_POSSIBLE) or not already_selected_location(location) then
-                available_location[index] = location;
+            if not same_location_possible or not already_selected_location(location) then
+                index = index + 1;
+                available_locations[index] = location;
             end
         end
     end
 
-    local random_number = cm:random_number(#available_location);
-    local selected_location = available_location[random_number];
+    local random_number = cm:random_number(#available_locations);
+    local selected_location = available_locations[random_number];
 
     if not selected_location then
         GAM_LOG("Error: not enough location, default one is set");
@@ -784,12 +820,10 @@ function CI_location(invasion_type)
     
     if CI_INVASION_TYPES.EMPIRE.key == invasion_type_key then
         location = CI_LOCATIONS.EMPIRE;
-        GAM_LOG("empire loc");
     elseif CI_INVASION_TYPES.NAGGAROTH.key == invasion_type_key then
         location = CI_LOCATIONS.NAGGAROTH;
     else
         location = additional_location();
-        GAM_LOG("add loc");
     end
 
     -- Reset location
@@ -848,6 +882,30 @@ function CI_next_position(location, army_type)
     end
     
     return next_position;
+end
+
+-- Clean some items between stages
+function CI_clean_items()
+
+    for _, army_type in pairs(CI_ARMY_TYPES) do
+        army_type.next_faction_key = nil;
+    end
+end
+
+function CI_next_faction(army_type)
+    local next = army_type.next;
+
+    -- First call per stage
+    if not next then
+        next = 1;
+    end
+
+    if not army_type.faction_keys[next] then
+        GAM_LOG("Error: Not enough faction key for "..army_type.key);
+    end
+
+    army_type.next = next + 1;
+    return army_type.faction_keys[next];
 end
 
 
