@@ -1,5 +1,7 @@
-local gam_mod_name = "gam_chaotic_invasion";
-GAM_MOD = nil;
+core:load_mod_script("/script/_lib/mod/!gam_chaotic_invasion.lua");
+local gam_mod_name = "gam_chaotic_invasion"
+local gam_mod = get_mct():register_mod("gam_chaotic_invasion");
+GAM_LOG("Register MCT Mod");
 
 -- Find localised text for setting.
 -- Search first for setting key, then recursively search for default
@@ -53,10 +55,10 @@ local function randomized_option_text_and_tooltip(option, option_min, option_max
     option_max:set_tooltip_text(find_localised_tooltip(setting_key_maximum));
 end
 
-local function add_option(setting, invasion_stage, invasion_type, special_type)
-    local setting_key = CI_mct_setting_keys(setting, invasion_stage, invasion_type, special_type);
-    local option = GAM_MOD:add_new_option(setting_key, "checkbox");
-    option:set_default_value(CI_load_setting(setting, invasion_stage, invasion_type, special_type));
+local function add_option(setting, ...)
+    local setting_key = CI_mct_setting_keys(setting, ...);
+    local option = gam_mod:add_new_option(setting_key, "checkbox");
+    option:set_default_value(CI_load_setting(setting, ...));
 
     -- We can't call effect.get_localised_string before game is init, so we need to do when mct ui is created
     -- That's the only event i've found that can be late enough to not crash game, and early enough to have text and tooltip
@@ -64,39 +66,27 @@ local function add_option(setting, invasion_stage, invasion_type, special_type)
     if not core:is_campaign() then
         option_text_and_tooltip(option);
     else
-        
         core:add_ui_created_callback(function() option_text_and_tooltip(option) end);
-
-        -- core:add_listener(
-        --     "RefreshGamOption"..option:get_key(),
-        --     "FirstTickAfterWorldCreated",
-        --     true,    
-        --     function(context)
-        --         local option = context:option();
-        --         option_text_and_tooltip(option);
-        --     end,
-        --     false
-        -- )
     end
     
     return option;
 end
 
-local function add_randomizable_options(lower_bound, upper_bound, setting, invasion_stage, invasion_type, special_type)
-    local setting_key, setting_key_minimum, setting_key_maximum  = CI_mct_setting_keys(setting, invasion_stage, invasion_type, special_type);
+local function add_randomizable_options(lower_bound, upper_bound, setting, ...)
+    local setting_key, setting_key_minimum, setting_key_maximum  = CI_mct_setting_keys(setting, ...);
 
     -- Mod defaults, from CI_SETTINGS
-    local value, min, max = CI_setting_values(setting, invasion_stage, invasion_type, special_type);
+    local value, min, max = CI_setting_values(setting, ...);
 
-    local option = GAM_MOD:add_new_option(setting_key, "checkbox");
+    local option = gam_mod:add_new_option(setting_key, "checkbox");
     option:set_default_value(value);
 
-    local option_min = GAM_MOD:add_new_option(setting_key_minimum, "slider");
+    local option_min = gam_mod:add_new_option(setting_key_minimum, "slider");
     option_min:slider_set_step_size(1);
     option_min:slider_set_min_max(lower_bound, upper_bound);
     option_min:set_default_value(min);
 
-    local option_max = GAM_MOD:add_new_option(setting_key_maximum, "slider");
+    local option_max = gam_mod:add_new_option(setting_key_maximum, "slider");
     option_max:slider_set_step_size(1);
     option_max:slider_set_min_max(lower_bound, upper_bound);
     option_max:set_default_value(max);
@@ -110,84 +100,53 @@ local function add_randomizable_options(lower_bound, upper_bound, setting, invas
     return option, option_min, option_max;
 end
 
-local function add_general_options(invasion_stage)
+local function add_general_options()
+    local section = gam_mod:get_section_by_key ("default")
+    section:set_option_sort_function("index_sort");
 
-    add_option(CI_SETTINGS.IS_ACTIVATED, invasion_stage, CI_INVASION_TYPES.EMPIRE);
-    add_option(CI_SETTINGS.IS_ACTIVATED, invasion_stage, CI_INVASION_TYPES.NAGGAROTH);
-    add_option(CI_SETTINGS.IS_ACTIVATED, invasion_stage, CI_INVASION_TYPES.ADDITIONAL);
+    add_option(CI_SETTINGS.INVASIONS_ACTIVATED);
+    add_option(CI_SETTINGS.KEEP_SAME_LOCATION);
+    add_option(CI_SETTINGS.SAME_LOCATION_POSSIBLE);
+    add_option(CI_SETTINGS.IS_LOCATION_MANDATORY, CI_LOCATIONS.CHAOS_WASTE);
+    add_option(CI_SETTINGS.IS_LOCATION_MANDATORY, CI_LOCATIONS.NAGGAROTH);
+    add_option(CI_SETTINGS.CHARACTER_ANYWHERE);
+    add_option(CI_SETTINGS.LOCATION_MESSAGES);
+end
+
+local function add_stage_options(invasion_stage)
+    local section = gam_mod:add_new_section(invasion_stage.key);
+    section:set_option_sort_function("index_sort");
+
     add_randomizable_options(2, 300, CI_SETTINGS.STARTING_TURN, invasion_stage);
+    add_randomizable_options(1, 10, CI_SETTINGS.INVASIONS_PER_STAGE, invasion_stage);
+    add_randomizable_options(1, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, CI_ARMY_TYPES.CHAOS);
+    add_randomizable_options(0, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, CI_ARMY_TYPES.NORSCA);
+    add_randomizable_options(0, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, CI_ARMY_TYPES.BEASTMEN);
     add_randomizable_options(1, 40, CI_SETTINGS.CHARACTER_LEVEL, invasion_stage);
     add_randomizable_options(0, 9, CI_SETTINGS.ARMY_LEVEL, invasion_stage);
     add_randomizable_options(0, 50, CI_SETTINGS.AGENT_NUMBER, invasion_stage);
 end
 
-local function add_invasion_options(invasion_stage, invasion_type)
-
-    if CI_INVASION_TYPES.ADDITIONAL == invasion_type then
-        add_randomizable_options(0, 5, CI_SETTINGS.ADDITIONAL_INVASION_NUMBER, invasion_stage);
-    end
-
-    add_randomizable_options(0, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, invasion_type, CI_ARMY_TYPES.CHAOS);
-    add_randomizable_options(0, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, invasion_type, CI_ARMY_TYPES.NORSCA);
-    add_randomizable_options(0, 50, CI_SETTINGS.ARMIES_PER_INVASION, invasion_stage, invasion_type, CI_ARMY_TYPES.BEASTMEN);
-
-    if CI_INVASION_STAGES.END_GAME == invasion_stage then
-        add_option(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, invasion_stage, invasion_type, CI_SPECIAL_CHARACTERS.ARCHAON);
-        add_option(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, invasion_stage, invasion_type, CI_SPECIAL_CHARACTERS.KHOLEK);
-        add_option(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, invasion_stage, invasion_type, CI_SPECIAL_CHARACTERS.SIGVALD);
-        add_option(CI_SETTINGS.SPECIAL_CHARACTERS_POSSIBLE, invasion_stage, invasion_type, CI_SPECIAL_CHARACTERS.SARTHORAEL);
-        add_option(CI_SETTINGS.WINNING_KILL_ARMIES, invasion_type);
-    end
-
-end
-
-local function add_staged_section(invasion_stage, invasion_type)
-    local section_name = "";
-
-    if not invasion_type then
-        section_name = invasion_stage.key;
-    else
-        section_name = invasion_stage.key.."_"..invasion_type.key;
-    end
-
-    local section = GAM_MOD:add_new_section(section_name);
-    section:set_option_sort_function("index_sort");
-
-    if not invasion_type then
-        add_general_options(invasion_stage);
-    else
-        add_invasion_options(invasion_stage, invasion_type);
-    end
-end
-
-local function add_invasion_sections(invasion_stage)
-    add_staged_section(invasion_stage, CI_INVASION_TYPES.EMPIRE);
-    add_staged_section(invasion_stage, CI_INVASION_TYPES.NAGGAROTH);
-    add_staged_section(invasion_stage, CI_INVASION_TYPES.ADDITIONAL);
-end
-
 local function add_location_section()
-    local section = GAM_MOD:add_new_section("location");
+    local section = gam_mod:add_new_section("location");
     section:set_option_sort_function("index_sort");
-    add_option(CI_SETTINGS.KEEP_SAME_LOCATION);
-    add_option(CI_SETTINGS.SAME_LOCATION_POSSIBLE);
-    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.EMPIRE);
+    section:set_tooltip_text("mct_gam_chaotic_invasion_location_section_tooltip");
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.CHAOS_WASTE);
     add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.NAGGAROTH);
     add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.LUSTRIA);
-    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.VAMPIRE_COAST);
-    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.SEA_OF_SERPENTS);
-    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.FAR_EAST);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.UNKNOWM_SEAS);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.GREAT_OCEAN);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.SOUTH_GREAT_OCEAN);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.VORTEX);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.NAGASH_PYRAMID);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.SYLVANIA);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.BADLANDS);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.EMPIRE);
 end
 
-core:load_mod_script("/script/_lib/mod/gam_lib_chaos_invasion.lua");
-GAM_MOD = get_mct():register_mod(gam_mod_name);
-GAM_LOG("Register MCT Mod");
+gam_mod:set_section_sort_function("index_sort");
 
-GAM_MOD:set_section_sort_function("index_sort");
-add_option(CI_SETTINGS.INVASIONS_ACTIVATED);
--- Stage General settings
-add_staged_section(CI_INVASION_STAGES.MID_GAME);
-add_staged_section(CI_INVASION_STAGES.END_GAME);
+add_general_options();
 add_location_section();
-add_invasion_sections(CI_INVASION_STAGES.MID_GAME);
-add_invasion_sections(CI_INVASION_STAGES.END_GAME);
+add_stage_options(CI_INVASION_STAGES.MID_GAME);
+add_stage_options(CI_INVASION_STAGES.END_GAME);
