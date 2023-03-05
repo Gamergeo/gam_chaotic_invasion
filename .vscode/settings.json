@@ -11,6 +11,8 @@
         "get_mct",
         "mct",
         "effect",
-        "CI_personality_swap"
+        "CI_personality_swap",
+        "CI_declare_war",
+        "weighted_list"
     ]
 }

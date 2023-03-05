@@ -111,6 +111,9 @@ local function add_general_options()
     add_option(CI_SETTINGS.IS_LOCATION_MANDATORY, CI_LOCATIONS.NAGGAROTH);
     add_option(CI_SETTINGS.CHARACTER_ANYWHERE);
     add_option(CI_SETTINGS.LOCATION_MESSAGES);
+    add_option(CI_SETTINGS.WINNING_KILL_ARMIES, CI_ARMY_TYPES.CHAOS);
+    add_option(CI_SETTINGS.WINNING_KILL_ARMIES, CI_ARMY_TYPES.NORSCA);
+    add_option(CI_SETTINGS.WINNING_KILL_ARMIES, CI_ARMY_TYPES.BEASTMEN);
 end
 
 local function add_stage_options(invasion_stage)

@@ -71,14 +71,48 @@ CI_INVASION_STAGES = {
     VICTORY = {
         key = "victory", 
         message_key = "defeated",
-        index = 4} -- Cleaning chaos effect, killing armies..
+        index = 4
+    } -- Cleaning chaos effect, killing armies..
 }
 
 CI_SPECIAL_CHARACTERS = {
-    ARCHAON = {key = "archaon"},
-    KHOLEK = {key = "kholek"},
-    SIGVALD = {key = "sigvald"},
-    SARTHORAEL = {key = "sarthorael"}     
+	ARCHAON = {
+		key = "archaon",
+		agent_subtype = "chs_archaon",
+		forename = "names_name_2147343903",
+		family_name = "names_name_2147357364",
+		effect_bundle = "wh_main_bundle_military_upkeep_free_force_unbreakable"
+	},
+	KHOLEK = {
+		key = "kholek",
+		agent_subtype = "chs_kholek_suneater",
+		forename = "names_name_2147345931",
+		family_name = "names_name_2147345934",
+		effect_bundle = "wh_main_bundle_military_upkeep_free_force_unbreakable"
+	},
+	SIGVALD = {
+		key = "sigvald",
+		agent_subtype = "chs_prince_sigvald",
+		forename = "names_name_2147345922",
+		family_name = "names_name_2147357370",
+		effect_bundle = "wh_main_bundle_military_upkeep_free_force_unbreakable"
+	},
+	SARTHORAEL = {
+		key = "sarthorael",
+		agent_subtype = "chs_lord_of_change",
+		forename = "names_name_2147357518",
+		family_name = "names_name_2147357523",
+		effect_bundle = "wh_main_bundle_military_upkeep_free_force_unbreakable"
+	}
+};
+
+CI_AGENTS = {
+    CHAOS = {
+		{agent = "wizard", subtype = "chs_sorcerer_fire", weight = 1},
+		{agent = "wizard", subtype = "chs_sorcerer_metal", weight = 1},
+		{agent = "wizard", subtype = "chs_sorcerer_death", weight = 1},
+		{agent = "champion", subtype = "chs_exalted_hero", weight = 3}
+	},
 }
 
 CI_ARMY_TYPES = {
@@ -91,7 +125,6 @@ CI_ARMY_TYPES = {
             "wh2_main_chs_chaos_incursion_def", 
             "wh2_main_chs_chaos_incursion_lzd",
             "wh2_main_chs_chaos_incursion_hef",
-            "wh_main_chs_chaos_qb1",
             "wh_main_chs_chaos_qb2",
             "wh_main_chs_chaos_qb3"
         }
@@ -103,9 +136,7 @@ CI_ARMY_TYPES = {
             "wh_main_nor_bjornling",
             "wh_main_nor_norsca_qb1",
             "wh_main_nor_norsca_qb2",
-            "wh_main_nor_norsca_qb3",
-            "wh2_dlc11_nor_norsca_qb4"
-            -- TODO fine one more
+            "wh_main_nor_norsca_qb3"
         }
     },
     BEASTMEN = {
@@ -115,10 +146,7 @@ CI_ARMY_TYPES = {
         faction_keys = {
             "wh_dlc03_bst_beastmen_chaos",
             "wh_dlc03_bst_beastmen_qb2",
-            "wh2_dlc17_bst_beastmen_qb4",
-            "wh2_dlc17_bst_beastmen_qb5",
-            "wh2_dlc17_bst_beastmen_qb6"
-            -- TODO find more
+            "wh_dlc03_bst_beastmen_qb3"
         }
     }
 }
@@ -159,7 +187,7 @@ CI_LOCATIONS = {
         [CI_ARMY_TYPES.CHAOS.key] = {
             next = 1,
             positions = {
-                {49, 712}, {91, 712}, {130, 711}, {172, 713}, {213, 710},
+                {41, 712}, {91, 712}, {130, 711}, {172, 713}, {213, 710},
                 {59, 712}, {101, 712}, {140, 711}, {182, 713}, {223, 710}
             }
         },
@@ -434,7 +462,8 @@ CI_DATA = {
 	CI_AUTORUN = false,
 	CI_EARLY_TURNS = 0, -- Used by wh2_dlc17_lzd_chaos_map.lua
 	CI_EXTRA_ARMIES = 0, -- Used by wh2_dlc17_lzd_chaos_map.lua
-	CI_LOCATIONS = {} -- Will store location. Used for messages and keep same location
+	CI_LOCATIONS = {}, -- Will store location. Used for messages and keep same location
+    CI_END_INVASIONS_NUMBER = -1; -- Number of invasion during end stage
 };
 
 -- Chaotic invasion settings
@@ -556,8 +585,19 @@ CI_SETTINGS = {
             [CI_LOCATIONS.BADLANDS.key] = {value = false},
             [CI_LOCATIONS.EMPIRE.key] = {value = false}
         }
+    },
+
+        -- Number of chaos armies per invasion
+    -- Stage, invasion type and army_type dependent
+    WINNING_KILL_ARMIES = {
+        key = "winning_kill_armies",
+        values = {
+            [CI_ARMY_TYPES.CHAOS.key] = {value = true},
+            [CI_ARMY_TYPES.NORSCA.key] = {value = false},
+            [CI_ARMY_TYPES.BEASTMEN.key] = {value = false}
+        }
     }
-}
+};
 
 --------------------------------------------------------------
 -------------------- Generic items methods -------------------
@@ -726,22 +766,22 @@ end
 local function is_invasion_faction(faction_key, army_type)
     GAM_LOG_INFO("is_invasion_faction("..output_params(faction_key, army_type)..")");
 
-	local is_invasion_faction = false;
+	local invasion_faction = false;
 	local army_types = CI_ARMY_TYPES;
 
 	if army_type then
-		army_types = {army_type}
+        army_types[army_type.key] = army_type;
 	end
 
-	for _, army_type in army_types do
+	for _, army_type in pairs(army_types) do
 		for i = 1, #army_type.faction_keys do
 			if army_type.faction_keys[i] == faction_key then
-				is_invasion_faction = true;
+				invasion_faction = true;
 			end
 		end
 	end
 
-	return is_invasion_faction;
+	return invasion_faction;
 end
 
 --------------------------------------------------------------
@@ -1006,6 +1046,13 @@ local function init_and_validate_settings(mct_settings)
 
     validate_settings_starting_turn();
 
+    local _, min, max = CI_setting_values(CI_SETTINGS.INVASIONS_PER_STAGE, CI_INVASION_STAGES.END_GAME);
+
+    -- User has changed invasion number, we need to reload it
+    if CI_DATA.CI_END_INVASIONS_NUMBER < min or CI_DATA.CI_END_INVASIONS_NUMBER > max then
+        CI_DATA.CI_END_INVASIONS_NUMBER = CI_load_setting(CI_SETTINGS.INVASIONS_PER_STAGE, CI_INVASION_STAGES.END_GAME);
+    end
+
     local _, intro_turn_min, intro_turn_max = CI_setting_values(CI_SETTINGS.STARTING_TURN, CI_INVASION_STAGES.INTRO);
     local _, mid_turn_min, mid_turn_max = CI_setting_values(CI_SETTINGS.STARTING_TURN, CI_INVASION_STAGES.MID_GAME);
     local _, end_turn_min, end_turn_max = CI_setting_values(CI_SETTINGS.STARTING_TURN, CI_INVASION_STAGES.END_GAME);
@@ -1044,6 +1091,13 @@ end
 --------------------------------------------------------------
 -----------------------     POSITIONS    ---------------------
 --------------------------------------------------------------
+
+local function random_position(minx, maxx, miny, maxy)
+    local x = cm:random_number(maxx, minx);
+    local y = cm:random_number(maxy, miny);
+
+    return {x, y};
+end
 
 -- Verify if location is in selected_locations
 local function already_selected_location(location, selected_locations)
@@ -1157,7 +1211,7 @@ local function prepare_locations()
     end
 
     -- Naggaroth mandatory
-    if CI_load_setting(CI_SETTINGS.IS_LOCATION_MANDATORY, CI_LOCATIONS.NAGGAROTH) then
+    if CI_load_setting(CI_SETTINGS.IS_LOCATION_MANDATORY, CI_LOCATIONS.NAGGAROTH) and not is_mid_game() then
         table.insert(locations, CI_LOCATIONS.NAGGAROTH);
     end
 
@@ -1173,6 +1227,8 @@ local function init_locations()
     for i = 1, #locations do
         CI_DATA.CI_LOCATIONS[i] = locations[i].key;
     end
+
+    CI_DATA.CI_END_INVASIONS_NUMBER = CI_load_setting(CI_SETTINGS.INVASIONS_PER_STAGE, CI_INVASION_STAGES.END_GAME);
 
     GAM_LOG("Locations has been initialized: "..output_table_param(locations));
     return locations;
@@ -1214,9 +1270,14 @@ local function locations_for_current_stage()
         locations = locations_from_data();
     end
 
-    local invasions_per_stage = CI_load_setting(CI_SETTINGS.INVASIONS_PER_STAGE, invasion_stage);
+    local invasions_per_stage;
+    if CI_INVASION_STAGES.END_GAME == invasion_stage then
+        invasions_per_stage = CI_DATA.CI_END_INVASIONS_NUMBER;
+    else
+        invasions_per_stage = CI_load_setting(CI_SETTINGS.INVASIONS_PER_STAGE, invasion_stage);
+    end
 
-    -- User has changed number of invasion, we need to reinit it
+    -- User has changed settings
     if invasions_per_stage > #locations then
         locations = init_locations();
     end
@@ -1305,7 +1366,7 @@ end
 local function show_messages(faction_key, locations)
 
 	-- Only non located generic message
-	if is_victory() or not CI_load_setting(CI_SETTINGS.LOCATION_MESSAGES) then
+	if is_victory() or (is_intro() and not CI_load_setting(CI_SETTINGS.LOCATION_MESSAGES)) then
 		local primary_message, secondary_message = message_details_keys();
 
         GAM_LOG("Show event message: "..primary_message.." to "..faction_key);
@@ -1347,7 +1408,10 @@ local function show_messages(faction_key, locations)
                 );
                 
             end
-			cm:make_region_visible_in_shroud(faction_key, location.region_name);
+
+            if is_mid_game() or is_end_game() then
+			    cm:make_region_visible_in_shroud(faction_key, location.region_name);
+            end
 		end
 	end
 end
@@ -1437,15 +1501,15 @@ function CI_setup()
 end
 
 function CI_FactionTurnStart(context)
-    
-    local next_stage = next_stage();
-    
-    -- Nothing to do
-    if not next_stage.turn_triggered then
-        return;
-    end
 
 	if context:faction():is_human() == true or CI_DATA.CI_AUTORUN == true then
+        local next_stage = next_stage();
+    
+        -- Nothing to do
+        if not next_stage.turn_triggered then
+            return;
+        end
+
 		local turn_number = cm:model():turn_number();
 
 		if CI_DATA.CI_LAST_UPDATE < turn_number then
@@ -1551,8 +1615,7 @@ function CI_Event_2_MidGame()
 	end
 
     CI_spawn_invasions(locations);
-	--CI_spawn_agents(event.agent_spawns);
-	--CI_declare_war(CI_CHAOS_ARMY_SPAWNS.faction_key);
+    CI_spawn_agents();
 	CI_apply_chaos_corruption();
 	CI_personality_swap(2);
 	out.dec_tab("chaos");
@@ -1570,6 +1633,7 @@ function CI_Event_3_EndGame()
 	end
     
     CI_spawn_invasions(locations);
+    CI_spawn_agents();
 	CI_apply_chaos_corruption();
 	CI_personality_swap(3);
 
@@ -1586,17 +1650,37 @@ function CI_Event_4_Victory()
 		show_messages(human_factions[i]);
 	end
 
-    local chaos_faction = cm:model():world():faction_by_key(CI_ARMY_TYPES.CHAOS.faction_keys[1]);
-	local chaos_force_list = chaos_faction:military_force_list();
-	
-	for i = 0, chaos_force_list:num_items() - 1 do
-		local force = chaos_force_list:item_at(i);
-
-		if force:has_general() == true then
-			local force_cqi = force:general_character():command_queue_index();
-			cm:kill_character(force_cqi, true, true);
-		end
-	end
+    -- Kill all armies
+    for _, army_type in pairs(CI_ARMY_TYPES) do
+        
+        -- Kill all armies
+        if CI_load_setting(CI_SETTINGS.WINNING_KILL_ARMIES, army_type) then
+            for i = 1, #army_type.faction_keys do
+                local faction_key = army_type.faction_keys[i];
+                local faction = cm:model():world():faction_by_key(faction_key);
+                cm:kill_all_armies_for_faction(faction);
+                GAM_LOG("Kill all armies for "..faction_key)
+            end
+        elseif CI_ARMY_TYPES.CHAOS == army_type then
+            for i = 1, #CI_ARMY_TYPES.CHAOS.faction_keys do
+                local chaos_faction = cm:model():world():faction_by_key(CI_ARMY_TYPES.CHAOS.faction_keys[i]);
+                local character_list = chaos_faction:character_list();
+        
+                for j = 0, character_list:num_items() - 1 do
+                    local character = character_list:item_at(j);
+            
+                    if character:character_subtype(CI_SPECIAL_CHARACTERS.ARCHAON.agent_subtype) or 
+                            character:character_subtype(CI_SPECIAL_CHARACTERS.KHOLEK.agent_subtype) or 
+                            character:character_subtype(CI_SPECIAL_CHARACTERS.SIGVALD.agent_subtype) or 
+                            character:character_subtype(CI_SPECIAL_CHARACTERS.SARTHORAEL.agent_subtype) then
+                        cm:set_character_immortality("character_cqi:"..character:command_queue_index(), false);
+                        cm:kill_character(character:command_queue_index(), false, true);
+                        GAM_LOG("Killed character for "..CI_ARMY_TYPES.CHAOS.faction_keys[i]);
+                    end
+                end
+            end
+        end
+    end
 	
 	cm:complete_scripted_mission_objective("wh_main_short_victory", "archaon_spawned", true);
 	cm:complete_scripted_mission_objective("wh_main_long_victory", "archaon_spawned", true);
@@ -1628,7 +1712,7 @@ local function create_army(faction_key, force_name, effect_bundle, position, cha
             army_invasion:add_unit_experience(army_level);
         end
         
-        GAM_LOG("Spawned Army ("..position[1]..", "..position[2]..") ("..tostring(x).." / "..tostring(y)..")");
+        GAM_LOG("Spawned Army, requested ("..position[1]..", "..position[2].."),find ("..tostring(x).." / "..tostring(y)..")");
 	end
 
 	return army_invasion;
@@ -1660,26 +1744,152 @@ local function spawn_army(faction_key, army_type, location)
 	return army_invasion;
 end
 
+-- Return true if the character is the leader of the faction (the only character present for now)
+local function is_faction_leader(character, faction_key)
+    GAM_LOG_INFO("is_faction_leader("..character.key..", "..faction_key..")");
+	local faction = cm:model():world():faction_by_key(faction_key);
+	local char_list = faction:character_list();
+	
+	for i = 0, char_list:num_items() - 1 do
+		local current_char = char_list:item_at(i);
+
+		if current_char:character_subtype(CI_SPECIAL_CHARACTERS.ARCHAON.agent_subtype) 
+            or current_char:character_subtype(CI_SPECIAL_CHARACTERS.KHOLEK.agent_subtype) 
+            or current_char:character_subtype(CI_SPECIAL_CHARACTERS.SIGVALD.agent_subtype) 
+            or current_char:character_subtype(CI_SPECIAL_CHARACTERS.SARTHORAEL.agent_subtype) then
+            return false;
+		end
+	end
+
+    return true;
+end
+
+local function spawn_character(character, faction_key, location)
+    GAM_LOG("spawn_character("..character.key..","..faction_key..","..location.key..")");
+	local position = location.main_position;
+    local try = 1;
+    local army_invasion;
+
+    while try <= 10 and not army_invasion do
+        try = try + 1;
+        army_invasion = create_army(faction_key, force_name(character), character.effect_bundle, position, 40, 9);
+
+        -- We try elsewhere
+        if not army_invasion then
+            position[1] = position[1] + 2 * try;
+            position[2] = position[2] + 2 * try;
+        end
+    end
+
+    if army_invasion then
+        local faction_leader = is_faction_leader(character, faction_key);
+        
+        if faction_leader then
+            GAM_LOG(character.key.." is the leader of faction "..faction_key);
+        else
+            GAM_LOG(character.key.." is not the leader of faction "..faction_key);
+        end
+        army_invasion:create_general(faction_leader, character.agent_subtype, character.forename, "", character.family_name, "");
+        army_invasion:set_general_immortal(true);
+        army_invasion:start_invasion(
+            function(self)
+                local force = self:get_force();
+                local force_cqi = force:command_queue_index();
+                cm:add_building_to_force(force_cqi, CI_ARMY_TYPES.CHAOS.buildings);
+            end);
+    else
+        GAM_LOG("Error : Failed Character Army Spawn!("..location.main_position[1]..", "..location.main_position[2]..")");
+    end
+end
+
+-- Return special character invasion number. They will spawn in this invasion.
+local function character_invasion_number(number_of_invasions)
+
+    -- Characters will spawn in the first invasion
+    if not CI_load_setting(CI_SETTINGS.CHARACTER_ANYWHERE) then
+        return 1, 1, 1;
+    else
+        return cm:random_number(number_of_invasions), cm:random_number(number_of_invasions), cm:random_number(number_of_invasions);
+    end
+end
+
+-- Declare war between faction_keys and all faction
+local function declare_war(warring_faction_keys) 
+
+    local faction_list = cm:model():world():faction_list();
+
+	for i = 0, faction_list:num_items() - 1 do
+		local faction = faction_list:item_at(i);
+		local faction_key = faction:name();
+		
+		if faction:is_null_interface() == false and faction:is_dead() == false and faction:culture() ~= "wh_main_chs_chaos" and faction:culture() ~= "wh_dlc03_bst_beastmen" then
+
+            for i = 1, #warring_faction_keys do
+                local warring_faction_key = warring_faction_keys[i];
+                cm:force_declare_war(warring_faction_key, faction_key, false, false);
+                cm:force_diplomacy("faction:"..warring_faction_key, "faction:"..faction_key, "peace", false, false, true);
+            end
+		end
+	end
+end
+
 -- Spawn all invasions for current stage
 function CI_spawn_invasions(locations)
     GAM_LOG("CI_spawn_invasions(locations)");
 	out.inc_tab("chaos");
 	reset_faction_keys();
 
-	local archaon_location, kholek_location, sigvald_location, sarthorael_location;
+	local kholek_invasion_number, sigvald_invasion_number, sarthorael_invasion_number = character_invasion_number(#locations);
+    local warring_faction_keys = {};
 	
-	for i = 1, #locations do
-		local location = locations[i];
+	for invasion_number = 1, #locations do
+		local location = locations[invasion_number];
 		GAM_LOG("Spawn invasion in "..location.key);
-		
 		out.inc_tab("chaos");
+        
         local army_types = {CI_ARMY_TYPES.CHAOS, CI_ARMY_TYPES.NORSCA, CI_ARMY_TYPES.BEASTMEN};
         for i = 1, #army_types do
 		    local army_type = army_types[i];
-
 			local faction_key = next_faction_key(army_type);
+
+            local already_used_faction_key = false;
+            for i = 1, #warring_faction_keys do
+                if warring_faction_keys[i] == faction_key then
+                    already_used_faction_key = true;
+                end
+            end
+
+            if not already_used_faction_key then
+                table.insert(warring_faction_keys, faction_key);
+            end
+
 			GAM_LOG("Selected faction: "..faction_key.." for "..army_type.key);
+
 			local number_armies = CI_load_setting_for_current_stage(CI_SETTINGS.ARMIES_PER_INVASION, army_type);
+
+            -- Special character spawn
+            if is_end_game() and CI_ARMY_TYPES.CHAOS == army_type then
+                
+        		CI_DATA.CI_EXTRA_ARMIES = CI_DATA.CI_EXTRA_ARMIES or 0; -- Savegame compatibility
+                number_armies = number_armies + CI_DATA.CI_EXTRA_ARMIES;
+
+                -- Archaon is always in first invasion and always leader
+                if invasion_number == 1 then
+                    spawn_character(CI_SPECIAL_CHARACTERS.ARCHAON, faction_key, location);
+                end
+            
+                if invasion_number == kholek_invasion_number then
+                    spawn_character(CI_SPECIAL_CHARACTERS.KHOLEK, faction_key, location);
+                end
+
+                if invasion_number == sigvald_invasion_number then
+                    spawn_character(CI_SPECIAL_CHARACTERS.SIGVALD, faction_key, location);
+                end
+
+                if invasion_number == sarthorael_invasion_number then
+                    spawn_character(CI_SPECIAL_CHARACTERS.SARTHORAEL, faction_key, location);
+                end
+            end
 
 			if number_armies then
 				GAM_LOG("Spawn "..number_armies.." "..army_type.key.." armies.");
@@ -1696,14 +1906,63 @@ function CI_spawn_invasions(locations)
 		
 		out.dec_tab("chaos");
 	end
+
+    declare_war(warring_faction_keys);
+end
+
+function CI_spawn_agents()
+    GAM_LOG("CI_spawn_agents()");
+	out.inc_tab("chaos");
+
+    local num_agents = CI_load_setting_for_current_stage(CI_SETTINGS.AGENT_NUMBER);
+
+	if num_agents > 0 then
+		local weighted_agents = weighted_list:new();
+		for i = 1, #CI_AGENTS.CHAOS do
+			local agent = CI_AGENTS.CHAOS[i];
+			weighted_agents:add_item(agent, agent.weight);
+		end
+
+		for i = 1, num_agents do
+			local selected_agent = weighted_agents:weighted_select();
+			local position; local x = -1; local y = -1; local try = 1;
+
+            while try <= 10 and (x <= -1 or y <= -1) do
+                position = random_position(10, 700, 100, 550);
+			    x, y = cm:find_valid_spawn_location_for_character_from_position(CI_ARMY_TYPES.CHAOS.faction_keys[1], position[1], position[2], true);
+                
+                try = try + 1;
+            end
+
+			if x > -1 and y > -1 then
+                local agent_xp = CI_load_setting_for_current_stage(CI_SETTINGS.CHARACTER_LEVEL);
+				cm:create_agent(
+					CI_ARMY_TYPES.CHAOS.faction_keys[1],
+					selected_agent.agent,
+					selected_agent.subtype,
+					x, y,
+					false,
+					function(cqi)
+						cm:add_agent_experience("character_cqi:"..cqi, agent_xp, true);
+					end
+				);
+				GAM_LOG("Spawned Chaos Agent "..i.." ("..tostring(x).." / "..tostring(y)..")");
+			else
+				out.GAM_LOG("FAILED Chaos Agent Spawn "..i);
+			end
+		end
+	end
+	out.dec_tab("chaos");
 end
 
 -- TODO : Chaos corruption settings
 function CI_chaos_corruption()
-    local chaos_corruption = 1;
+    local chaos_corruption = 0;
     
-    if is_end_game() then
-        chaos_corruption = chaos_corruption + (CI_DATA.CI_RAZED_REGIONS / 10);
+    if is_mid_game() then
+        chaos_corruption = 1;
+    elseif is_end_game() then
+        chaos_corruption = 1 + (CI_DATA.CI_RAZED_REGIONS / 10);
         chaos_corruption = math.floor(chaos_corruption);
     end
     
@@ -1715,7 +1974,6 @@ end
 -- All effects for effect bundle is managed here, not on DB
 function CI_apply_chaos_corruption()
     GAM_LOG("CI_apply_chaos_corruption()");
-	out.chaos("CI_apply_chaos_corruption()");
 
     local chaos_corruption = CI_chaos_corruption();
     local human_factions = cm:get_human_factions();
@@ -1758,12 +2016,11 @@ function CI_apply_chaos_corruption()
             effect_dummy = "wh_main_effect_religion_conversion_chaos_events_bad_dummy";
         end
         
-        effect_bundle_faction:add_effect(effect_dummy, "faction_to_province_own", chaos_corruption);
-        
 		cm:remove_effect_bundle("gam_effect_bundle_faction_ci_mid", human_factions[i]);
 		cm:remove_effect_bundle("gam_effect_bundle_faction_ci_end", human_factions[i]);
 
         if not is_victory() then
+            effect_bundle_faction:add_effect(effect_dummy, "faction_to_province_own", chaos_corruption);
 		    cm:apply_custom_effect_bundle_to_faction(effect_bundle_faction, faction);
         end
 	end 
@@ -1782,7 +2039,6 @@ function CI_apply_chaos_corruption()
 
 		if current_region:is_province_capital() == true then
 			cm:remove_effect_bundle_from_region(effect_bundle_region_name, region_key);
-            
             if not is_victory() then
 			    cm:apply_custom_effect_bundle_to_region(effect_bundle_region, current_region);
             end
@@ -1790,31 +2046,34 @@ function CI_apply_chaos_corruption()
 	end
 end
 
--- TODO All chaos faction
 function CI_invasion_deaths()
-	local chaos_faction = cm:model():world():faction_by_key(CI_ARMY_TYPES.chaos.faction_key);
-	local archaon = 0;
-	local kholek = 0;
-	local sigvald = 0;
-	local char_list = chaos_faction:character_list();
-	
-	for i = 0, char_list:num_items() - 1 do
-		local current_char = char_list:item_at(i);
+    GAM_LOG_INFO("CI_invasion_deaths()");
+    local archaon = 0;
+    local kholek = 0;
+    local sigvald = 0;
+    for i = 1, #CI_ARMY_TYPES.CHAOS.faction_keys do
+        local chaos_faction = cm:model():world():faction_by_key(CI_ARMY_TYPES.CHAOS.faction_keys[i]);
+        local char_list = chaos_faction:character_list();
+        
+        for j = 0, char_list:num_items() - 1 do
+            local current_char = char_list:item_at(j);
 
-		if current_char:character_subtype("chs_archaon") or current_char:character_subtype("chs_kholek_suneater") or current_char:character_subtype("chs_prince_sigvald") then
-			if current_char:has_military_force() == true then
-				if current_char:is_wounded() == false then
-					if current_char:character_subtype("chs_archaon") == true and current_char:is_faction_leader() == true then
-						archaon = 1;
-					elseif current_char:character_subtype("chs_kholek_suneater") == true  then
-						kholek = 1;
-					elseif current_char:character_subtype("chs_prince_sigvald") == true  then
-						sigvald = 1;
-					end
-				end
-			end
-		end
-	end
+            if current_char:character_subtype("chs_archaon") or current_char:character_subtype("chs_kholek_suneater") or current_char:character_subtype("chs_prince_sigvald") then
+                if current_char:has_military_force() == true then
+                    if current_char:is_wounded() == false then
+                        if current_char:character_subtype("chs_archaon") == true then
+                            archaon = 1;
+                        elseif current_char:character_subtype("chs_kholek_suneater") == true  then
+                            kholek = 1;
+                        elseif current_char:character_subtype("chs_prince_sigvald") == true  then
+                            sigvald = 1;
+                        end
+                    end
+                end
+            end
+        end
+    end
+
 	return archaon, kholek, sigvald;
 end
 
@@ -1834,42 +2093,4 @@ if core:is_campaign() then
             end
         end
     );
-end
-
-
------ TODO : TODELETE
-if core:is_campaign() then
-    function cm:spawn_test_army(x, y)
-        create_army(CI_ARMY_TYPES.CHAOS.faction_keys[1], "CI_chaos", "", {x,y}, 20, 6):start_invasion();
-    end
-
-    function cm:spawn_tests_bloc(position)
-        cm:spawn_test_army(position[1],position[2]);
-        cm:spawn_test_army(position[1],position[2]);
-        cm:spawn_test_army(position[1],position[2]);
-        cm:spawn_test_army(position[1],position[2]);
-        cm:spawn_test_army(position[1],position[2]);
-        cm:spawn_test_army(position[1],position[2]);
-        cm:spawn_test_army(position[1],position[2]);
-        cm:spawn_test_army(position[1],position[2]);
-    end
-
-    function cm:spawn_tests_blocs(positions) 
-
-        for i = 1, #positions do
-            cm:spawn_tests_bloc(positions[i]);
-        end
-    end
-
-    function cm:spawn_test_position(position) 
-
-        cm:spawn_test_army(position[1],position[2]);
-    end
-
-    function cm:spawn_test_positions(positions) 
-
-        for i = 1, #positions do
-            cm:spawn_test_position(positions[i]);
-        end
-    end
 end

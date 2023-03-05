@@ -1,13 +1,8 @@
-Faction : check attrition...etc
-
 at least one location activated + au moins une armée chaos
 
-- declare war
 
-- spawn special
-
-- spawn agent
-
-- victory
 
 - Tester bien la corruption
+_armies uspplémentaire (early_armies)
+
+sfo
