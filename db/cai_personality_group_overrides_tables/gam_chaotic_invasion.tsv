@@ -1,0 +1,21 @@
+difficulty_handicap	faction_key	campaign_key	player_faction	player_subculture	player_culture	personality_group
+#cai_personality_group_overrides_tables;2;db/cai_personality_group_overrides_tables/gam_chaotic_invasion						
+-2	wh_main_chs_chaos_qb1	main_warhammer				wh_group_chaos_default_hard
+-3	wh_main_chs_chaos_qb1	main_warhammer				wh_group_chaos_default_hard
+-2	wh_main_chs_chaos_qb2	main_warhammer				wh_group_chaos_default_hard
+-3	wh_main_chs_chaos_qb2	main_warhammer				wh_group_chaos_default_hard
+-2	wh_main_chs_chaos_qb3	main_warhammer				wh_group_chaos_default_hard
+-3	wh_main_chs_chaos_qb3	main_warhammer				wh_group_chaos_default_hard
+-2	wh2_main_chs_chaos_incursion_def	main_warhammer				wh_group_chaos_default_hard
+-3	wh2_main_chs_chaos_incursion_def	main_warhammer				wh_group_chaos_default_hard
+-2	wh2_main_chs_chaos_incursion_lzd	main_warhammer				wh_group_chaos_default_hard
+-3	wh2_main_chs_chaos_incursion_lzd	main_warhammer				wh_group_chaos_default_hard
+-2	wh2_main_chs_chaos_incursion_hef	main_warhammer				wh_group_chaos_default_hard
+-3	wh2_main_chs_chaos_incursion_hef	main_warhammer				wh_group_chaos_default_hard
+-3	wh_main_nor_norsca_qb1	main_warhammer				wh2_group_norsca_default
+-3	wh_main_nor_norsca_qb2	main_warhammer				wh2_group_norsca_default
+-3	wh_main_nor_norsca_qb3	main_warhammer				wh2_group_norsca_default
+-2	wh_dlc03_bst_beastmen_qb2	main_warhammer				wh_group_chaos_default_hard
+-3	wh_dlc03_bst_beastmen_qb2	main_warhammer				wh_group_chaos_default_hard
+-2	wh_dlc03_bst_beastmen_qb3	main_warhammer				wh_group_chaos_default_hard
+-3	wh_dlc03_bst_beastmen_qb3	main_warhammer				wh_group_chaos_default_hard

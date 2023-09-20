@@ -1,0 +1,90 @@
+key	text	tooltip
+#Loc;1;text/db/mct_gam_chaotic_invasion.loc		
+mct_gam_chaotic_invasion_title	Chaotic invasion	true
+mct_gam_chaotic_invasion_author	Gamergeo	true
+mct_gam_chaotic_invasion_description	You can configure each invasion stage and choose how many invasions will appear during those stages and where.\\nEach invasion can be any number of chaos, norscan and beastmen armies.\\nCarefully setup wanted possible location, some can be really hard.\\nMany options can be randomized. If you don't want an option to be randomized, uncheck it and the minimum value will be chosen instead of a random value. If you don't want something to spawn (like norsca/beastmen armies in first stage), the minimum and maximum should be 0.\\n\\nWarning: Please note that the invasion difficulty setting is no longer used. Please select settings here instead.\\nTooltip "Default" represents base game settings, if possible, not mod defaults. A/B/C/D/E represent the default values ​​for Off/On/Hard/Very Hard/Legendary, respectively.	true
+mct_gam_chaotic_invasion_default_section_text	General settings	true
+mct_gam_chaotic_invasion_mid_section_text	First phase of invasion	true
+mct_gam_chaotic_invasion_end_section_text	Second phase of invasion	true
+mct_gam_chaotic_invasion_location_section_text	Possible locations	true
+mct_gam_chaotic_invasion_location_section_tooltip	Here you can select locations eligible for invasion spawn. Pleaste note that some location can be really hard.	true
+mct_gam_chaotic_invasion_default_random_tooltip	If not checked, minimum is used.	true
+mct_gam_chaotic_invasion_minimum_text	Minimum	true
+mct_gam_chaotic_invasion_maximum_text	Maximum	true
+mct_gam_chaotic_invasion_maximum_tooltip	Not used if not random.	true
+mct_gam_chaotic_invasion_invasions_activated_text	Invasion features	true
+mct_gam_chaotic_invasion_invasions_activated_tooltip	If not checked, invasion won't spawn at all.	true
+mct_gam_chaotic_invasion_keep_same_location_text	Keep same location between stages	true
+mct_gam_chaotic_invasion_keep_same_location_tooltip	Invasion will spawn in same place for both stage of invasion.	true
+mct_gam_chaotic_invasion_same_location_possible_text	Several invasion in the same place possible	true
+mct_gam_chaotic_invasion_same_location_possible_tooltip	If checked, different invasion can spawn in the same place. Warning, this can have huge impact on your game !	true
+mct_gam_chaotic_invasion_character_anywhere_text	Special character anywhere	true
+mct_gam_chaotic_invasion_character_anywhere_tooltip	Can special character spawn anywhere ?\\nCare, as you need to kill Archaon, Sigvald and Kholek to win the invasion, that can be harder if checked.\\nDefaut: No	true
+mct_gam_chaotic_invasion_force_character_anywhere_text	Force special character anywhere	false
+mct_gam_chaotic_invasion_force_character_anywhere_tooltip	Special character will be leader of an invasion, if possible.\\nTherefore, if different locations are selected and several invasions spawned, special character will be forced to be spawned in different locations.\\nDefault: No	false
+mct_gam_chaotic_invasion_chaos_winning_kill_armies_text	Kill chaos armies on win	true
+mct_gam_chaotic_invasion_chaos_winning_kill_armies_tooltip	Remember: You need to kill Archaon, Kholek and Sigval to win againt the chaos invasion.\\nIf checked, all chaos armies will be destroyed during winning stage. If not, only special characters will die.\\nDefault: Yes.	true
+mct_gam_chaotic_invasion_norsca_winning_kill_armies_text	Kill norsca armies on win	true
+mct_gam_chaotic_invasion_norsca_winning_kill_armies_tooltip	Remember: You need to kill Archaon, Kholek and Sigval to win againt the chaos invasion.\\nIf checked, all norsca armies will be destroyed during winning stage. Only invasion factions are concerned.\\nDefault: No.	true
+mct_gam_chaotic_invasion_beastmen_winning_kill_armies_text	Kill beastmen armies on win	true
+mct_gam_chaotic_invasion_beastmen_winning_kill_armies_tooltip	Remember: You need to kill Archaon, Kholek and Sigval to win againt the chaos invasion.\\nIf checked, all beastmen armies will be destroyed during winning stage. Only invasion factions are concerned.\\nDefault: No.	true
+mct_gam_chaotic_invasion_chaos_waste_is_location_mandatory_text	Force invasion in Chaos waste	true
+mct_gam_chaotic_invasion_chaos_waste_is_location_mandatory_tooltip	If checked, there always be an invasion in the chaos waste.\\nDefault: Yes	true
+mct_gam_chaotic_invasion_naggaroth_is_location_mandatory_text	Force invasion in Naggaroth	true
+mct_gam_chaotic_invasion_naggaroth_is_location_mandatory_tooltip	If checked, there always be an invasion in naggaroth in second stage.\\nYou still need to spawn enough invasion (i.e. 2) if chaos waste and naggaroth are both mandatory.\\nDefault: Yes	true
+mct_gam_chaotic_invasion_location_messages_text	Show location into intro messages	true
+mct_gam_chaotic_invasion_location_messages_tooltip	If checked, specific messages will be shown to alert on where invasions will spawn during the intro stage. If not, only generic message will be shown.\\nIntro messages doesn't show first stage of invasion locations, only final ones (can be same if keep same location is checked).	true
+mct_gam_chaotic_invasion_starting_turn_text	Randomize start turn.	true
+mct_gam_chaotic_invasion_mid_starting_turn_tooltip	Randomize the turn for the first phase of invasion to be triggered.\\nDefault : Yes	true
+mct_gam_chaotic_invasion_mid_starting_turn_minimum_tooltip	Default: 90	true
+mct_gam_chaotic_invasion_mid_starting_turn_maximum_tooltip	Default: 110\\nNot used if not random.	true
+mct_gam_chaotic_invasion_end_starting_turn_tooltip	Randomize the turn for the second phase of invasion to be triggered.\\nDefault : Yes	true
+mct_gam_chaotic_invasion_end_starting_turn_minimum_tooltip	Default: 140	true
+mct_gam_chaotic_invasion_end_starting_turn_maximum_tooltip	Default: 160\\nNot used if not random.	true
+mct_gam_chaotic_invasion_invasions_per_stage_text	Number of invasions	true
+mct_gam_chaotic_invasion_invasions_per_stage_tooltip	Randomize the number of spawned invasions during this stage.\\nDefault: No	true
+mct_gam_chaotic_invasion_mid_invasions_per_stage_minimum_tooltip	Default: 1 (Chaos waste only)	true
+mct_gam_chaotic_invasion_end_invasions_per_stage_minimum_tooltip	Default: 2 (Chaos waste and naggaroth)	true
+mct_gam_chaotic_invasion_character_level_text	Randomize character level.	true
+mct_gam_chaotic_invasion_character_level_tooltip	Randomize lord / hero level.\\nDefault : No	true
+mct_gam_chaotic_invasion_character_level_minimum_tooltip	Default: 10	true
+mct_gam_chaotic_invasion_army_level_text	Randomize army level.	true
+mct_gam_chaotic_invasion_army_level_tooltip	Randomize level of units in armies.\\nDefault : No	true
+mct_gam_chaotic_invasion_army_level_minimum_tooltip	Default: 0/0/3/6/9	true
+mct_gam_chaotic_invasion_armies_per_invasion_tooltip	If not checked, minimum is used.\\nDefault: No	true
+mct_gam_chaotic_invasion_armies_per_invasion_minimum_tooltip	Default: 0	true
+mct_gam_chaotic_invasion_chaos_armies_per_invasion_text	Randomize number of chaos armies	true
+mct_gam_chaotic_invasion_mid_chaos_armies_per_invasion_minimum_tooltip	Default: 0/4/6/8/12	true
+mct_gam_chaotic_invasion_end_chaos_armies_per_invasion_minimum_tooltip	Default: 0/8/12/16/24 for chaos waste, 0/4/6/8/12 for naggaroth	true
+mct_gam_chaotic_invasion_norsca_armies_per_invasion_text	Randomize number of norsca armies	true
+mct_gam_chaotic_invasion_end_norsca_armies_per_invasion_minimum_tooltip	Default: 4	true
+mct_gam_chaotic_invasion_beastmen_armies_per_invasion_text	Randomize number of beastmen armies	true
+mct_gam_chaotic_invasion_end_beastmen_armies_per_invasion_minimum_tooltip	Default: 1	true
+mct_gam_chaotic_invasion_agent_number_text	Randomize number of agent	true
+mct_gam_chaotic_invasion_agent_number_tooltip	If not checked, minimum is used.\\nDefault: No	true
+mct_gam_chaotic_invasion_mid_agent_number_minimum_tooltip	Default: 2	true
+mct_gam_chaotic_invasion_end_agent_number_minimum_tooltip	Default: 4	true
+mct_gam_chaotic_invasion_chaos_waste_location_activated_text	Chaos waste	true
+mct_gam_chaotic_invasion_chaos_waste_location_activated_tooltip	If chaos waste is mandatory (general option), it's considered as checked.\\n\\nArmies will spawn in the same place as in the base game:\\n - Chaos will spawn in the chaos waste.\\n - Beastmen will spawn in the chaos waste.\\n - Norsca will spawn in norsca.	true
+mct_gam_chaotic_invasion_naggaroth_location_activated_text	Naggaroth	true
+mct_gam_chaotic_invasion_naggaroth_location_activated_tooltip	If naggaroth is mandatory (general option), it's considered as checked.\\n\\n - Chaos will spawn on the extreme north of naggaroth.\\n - Beastmen will spawn in the forest next to the extreme north of Naggaroth.\\n - Norsca will spawn at the eastern tip of the north of naggaroth.	true
+mct_gam_chaotic_invasion_lustria_location_activated_text	Lustria	true
+mct_gam_chaotic_invasion_lustria_location_activated_tooltip	This location is very close to lizardmen settlements.\\n\\n - Chaos will spawn along the southwest edge of Lustria.\\n - Beastmen will spawn close to forest on west and south of Lustria.\\n - Norsca will spawn along the far sea.	true
+mct_gam_chaotic_invasion_vortex_location_activated_text	Vortex	true
+mct_gam_chaotic_invasion_vortex_location_activated_tooltip	This location is very close to high elf settlements.\\n\\n - Chaos will spawn around the vortex.\\n - Beastmen will spawn close to island around the vortex and some close to forest in Ulthuan.\\n - Norsca will spawn around Ulthuan.	true
+mct_gam_chaotic_invasion_great_ocean_location_activated_text	Great ocean	true
+mct_gam_chaotic_invasion_great_ocean_location_activated_tooltip	Northern part of the ocean, between naggaroth and old continent. This location is close to Bretonnian lands.\\n\\n - Chaos will spawn in the ocean.\\n - Beastmen will spawn close to forests on Bretonnia and Albion.\\n - Norsca will in the middle sea and the sea of claws.	true
+mct_gam_chaotic_invasion_south_great_ocean_location_activated_text	South great ocean	true
+mct_gam_chaotic_invasion_south_great_ocean_location_activated_tooltip	Southern part of the ocean, between Lustria and Arabia.\\n\\n - Chaos will spawn in the ocean.\\n - Beastmen will spawn close to volcanic (lustria) and sorceress island (arabia).\\n - Norsca will spawn in the south of the great ocean, and around galleons graveyard.	true
+mct_gam_chaotic_invasion_unknown_seas_location_activated_text	Unknown seas (far east)	true
+mct_gam_chaotic_invasion_unknown_seas_location_activated_tooltip	- Chaos will spawn in the unknown seas, far to the east.\\n - Beastmen will spawn on the dragon islands and in forest in the gnoblar country.\\n - Norsca will spawn in the unknown seas.	true
+mct_gam_chaotic_invasion_nagash_pyramid_location_activated_text	Nagash pyramid	true
+mct_gam_chaotic_invasion_nagash_pyramid_location_activated_tooltip	This location is in middle of Arabia !\\n\\n- Chaos will spawn around the Black pyramid of Nagash.\\n - Beastmen will spawn close to forest on south of Arabia.\\n - Norsca in and around the gulf of Medes.	true
+mct_gam_chaotic_invasion_sylvania_location_activated_text	Sylvania	true
+mct_gam_chaotic_invasion_sylvania_location_activated_tooltip	This location is in middle of the empire !\\n\\n - Chaos will spawn around the Drakenhof castle.\\n - Beastmen will spawn in forest bordering Sylvania.\\n - Norsca will spawn in mountains bordering Sylvania.	true
+mct_gam_chaotic_invasion_badlands_location_activated_text	Badlands	true
+mct_gam_chaotic_invasion_badlands_location_activated_tooltip	Very close to drawf and orks settlements.\\n\\n - Chaos will spawn close to Valayas sorrow.\\n - Beastmen will spawn in the mountains in the desolation of Nagash.\\n - Norsca will spawn along the pirate coast.	true
+mct_gam_chaotic_invasion_empire_location_activated_text	Empire	true
+mct_gam_chaotic_invasion_empire_location_activated_tooltip	This location is in middle of the empire !\\n\\n - Chaos will spawn around Altdorf.\\n - Beastmen will spawn in southern part of empire.\\n - Norsca will spawn in northern part of empire.	true
+mct_gam_chaotic_invasion_dwarf_mountains_location_activated_text	Karaz-A-Karak	false
+mct_gam_chaotic_invasion_dwarf_mountains_location_activated_tooltip	This location is in middle of dwarves mountains !\\n\\n - Chaos will spawn around Karaz-A-Karak.\\n - Beastmen will spawn all along the mountains and in forests to the east.\\n - Norsca will spawn in northern mountains.	false

@@ -1,0 +1,30 @@
+key	text	tooltip
+#Loc;1;text/db/gam_factions__.loc		
+factions_attack_desc_wh_main_chs_chaos_qb1	You are attacking the Creatures of Chaos!	true
+factions_defend_desc_wh_main_chs_chaos_qb1	You are defending against the Creatures of Chaos!	true
+factions_screen_adjective_wh_main_chs_chaos_qb1	Creatures of Chaos	true
+factions_screen_name_wh_main_chs_chaos_qb1	Creatures of Chaos	true
+factions_attack_desc_wh_main_chs_chaos_qb2	You are attacking the Minions of Chaos!	true
+factions_defend_desc_wh_main_chs_chaos_qb2	You are defending against the Minions of Chaos!	true
+factions_screen_adjective_wh_main_chs_chaos_qb2	Minions of Chaos	true
+factions_screen_name_wh_main_chs_chaos_qb2	Minions of Chaos	true
+factions_attack_desc_wh_main_nor_norsca_qb1	You are attacking the Norsca Invaders!	true
+factions_defend_desc_wh_main_nor_norsca_qb1	You are defending against the Norsca Invaders!	true
+factions_screen_adjective_wh_main_nor_norsca_qb1	Norsca Invaders	true
+factions_screen_name_wh_main_nor_norsca_qb1	Norsca Invaders	true
+factions_attack_desc_wh_main_nor_norsca_qb2	You are attacking the Norsca devoted to Chaos!	true
+factions_defend_desc_wh_main_nor_norsca_qb2	You are defending against the Norsca devoted to Chaos!	true
+factions_screen_adjective_wh_main_nor_norsca_qb2	Norsca devoted to Chaos	true
+factions_screen_name_wh_main_nor_norsca_qb2	Norsca devoted to Chaos	true
+factions_attack_desc_wh_main_nor_norsca_qb3	You are attacking the Norsca Chaos Ravagers!	true
+factions_defend_desc_wh_main_nor_norsca_qb3	You are defending against the Norsca Chaos Ravagers!	true
+factions_screen_adjective_wh_main_nor_norsca_qb3	Norsca Chaos Ravagers	true
+factions_screen_name_wh_main_nor_norsca_qb3	Norsca Chaos Ravagers	true
+factions_attack_desc_wh_dlc03_bst_beastmen_qb2	You are attacking the Warherd of the Dark Gods!	true
+factions_defend_desc_wh_dlc03_bst_beastmen_qb2	You are defending against the Warherd of the Dark Gods!	true
+factions_screen_adjective_wh_dlc03_bst_beastmen_qb2	Warherd of the Dark Gods	true
+factions_screen_name_wh_dlc03_bst_beastmen_qb2	Warherd of the Dark Gods	true
+factions_attack_desc_wh_dlc03_bst_beastmen_qb3	You are attacking the Warherd of Doom!	true
+factions_defend_desc_wh_dlc03_bst_beastmen_qb3	You are defending against the Warherd of Doom!	true
+factions_screen_adjective_wh_dlc03_bst_beastmen_qb3	Warherd of Doom	true
+factions_screen_name_wh_dlc03_bst_beastmen_qb3	Warherd of Doom	true

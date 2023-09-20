@@ -1,0 +1,6 @@
+key	text	tooltip
+#Loc;1;text/db/gam_effect_bundle__.loc		
+effect_bundles_localised_title_gam_effect_bundle_faction_ci_mid	Chaos Rises	true
+effect_bundles_localised_description_gam_effect_bundle_faction_ci_mid	The corrupt forces of Chaos taint the land.	true
+effect_bundles_localised_title_gam_effect_bundle_faction_ci_end	Chaos Invasion	true
+effect_bundles_localised_description_gam_effect_bundle_faction_ci_end	Know ye now that the time of mortals has come to an end. The hand of Chaos now casts a vast, impenetrable shadow upon the world!	true

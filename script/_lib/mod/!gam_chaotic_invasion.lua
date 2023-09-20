@@ -519,6 +519,9 @@ CI_SETTINGS = {
     -- Can special character spawns everywhere
     CHARACTER_ANYWHERE = {key = "character_anywhere", values = {value = false}},
 
+    -- Special character will spawn in differents invasions, if possible
+    FORCE_CHARACTER_ANYWHERE = {key = "force_character_anywhere", values = {value = false}},
+
     -- Chaos waste invasion mandatory
     IS_LOCATION_MANDATORY = {
         key = "is_location_mandatory",
@@ -1838,11 +1841,21 @@ end
 -- Return special character invasion number. They will spawn in this invasion.
 local function character_invasion_number(number_of_invasions)
 
-    -- Characters will spawn in the first invasion
-    if not CI_load_setting(CI_SETTINGS.CHARACTER_ANYWHERE) then
-        return 1, 1, 1;
-    else
+    if CI_load_setting(CI_SETTINGS.FORCE_CHARACTER_ANYWHERE) then
+        
+        if number_of_invasions == 1 then
+            return 1, 1, 1;
+        elseif number_of_invasions == 2 then
+            return 2, 1, 2;
+        elseif number_of_invasions == 3 then
+            return 2, 3, 1;
+        else
+            return 2, 3, 4;
+        end
+    elseif CI_load_setting(CI_SETTINGS.CHARACTER_ANYWHERE) then 
         return cm:random_number(number_of_invasions), cm:random_number(number_of_invasions), cm:random_number(number_of_invasions);
+    else -- Characters will spawn in the first invasion
+        return 1, 1, 1;
     end
 end
 
