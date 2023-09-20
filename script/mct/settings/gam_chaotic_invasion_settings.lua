@@ -145,6 +145,7 @@ local function add_location_section()
     add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.SYLVANIA);
     add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.BADLANDS);
     add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.EMPIRE);
+    add_option(CI_SETTINGS.LOCATION_ACTIVATED, CI_LOCATIONS.DWARF_MOUNTAINS);
 end
 
 gam_mod:set_section_sort_function("index_sort");

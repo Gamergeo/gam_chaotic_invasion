@@ -451,7 +451,37 @@ CI_LOCATIONS = {
             }
         },
     },
-
+    DWARF_MOUNTAINS = {
+        key = "dwarf_mountains",
+        region_name = "wh_main_the_silver_road_karaz_a_karak",
+        main_position = {707, 352},
+        [CI_ARMY_TYPES.CHAOS.key] = {
+            positions = {
+                {710, 351}, {718, 353}, {700, 348},
+                {706, 355}, {725, 355}, {748, 352},
+                {758, 346}, {758, 334}, {771, 369},
+                {734, 400}, {653, 376}, {768, 422},
+                {721, 354}, {770, 353}, {750, 352},
+                {565, 347}, {515, 372}, {477, 405}, 
+                {701, 349}
+            }
+        },
+        [CI_ARMY_TYPES.NORSCA.key] = {
+            positions = {
+                {608, 413}, {715, 449}, {768, 422}, {769, 402}, 
+                {744, 490}, {775, 383}, {747, 447}, {777, 390},
+                {767, 343}, {775, 456}, {715, 449}, {731, 477},
+                {735, 496}
+            }
+        },
+        [CI_ARMY_TYPES.BEASTMEN.key] = {
+            positions = {
+                {745, 357}, {792, 372}, {798, 376}, {774, 370},
+                {777, 369}, {807, 381}, {720, 354}, {736, 306},
+                {616, 359}, {515, 374}
+            }
+        },
+    },
 };
 
 CI_DATA = {
@@ -584,6 +614,9 @@ CI_SETTINGS = {
             [CI_LOCATIONS.SYLVANIA.key] = {value = false},
             [CI_LOCATIONS.BADLANDS.key] = {value = false},
             [CI_LOCATIONS.EMPIRE.key] = {value = false}
+,
+            [CI_LOCATIONS.DWARF_MOUNTAINS.key] = {value = false}
+
         }
     },
 
